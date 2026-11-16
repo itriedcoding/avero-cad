@@ -226,7 +226,12 @@ impl RobloxClient {
     }
 
     /// Fetch (or load from cache) a Roblox avatar thumbnail.
-    pub async fn avatar(&self, user_id: u64, kind: AvatarKind, force: bool) -> AppResult<AvatarView> {
+    pub async fn avatar(
+        &self,
+        user_id: u64,
+        kind: AvatarKind,
+        force: bool,
+    ) -> AppResult<AvatarView> {
         if !force {
             if let Some(cached) = self.memory_get(user_id, kind) {
                 if now_ms() - cached.fetched_at < AVATAR_TTL_MS {
@@ -299,7 +304,9 @@ impl RobloxClient {
         }
         if let Some(length) = image_response.content_length() {
             if length as usize > MAX_IMAGE_BYTES {
-                return Err(AppError::internal("Roblox avatar image is unexpectedly large."));
+                return Err(AppError::internal(
+                    "Roblox avatar image is unexpectedly large.",
+                ));
             }
         }
         let bytes = image_response.bytes().await?;
@@ -404,7 +411,10 @@ mod tests {
 
     #[test]
     fn detects_supported_images() {
-        assert_eq!(detect_mime(&[0x89, b'P', b'N', b'G', 0, 0]), Some("image/png"));
+        assert_eq!(
+            detect_mime(&[0x89, b'P', b'N', b'G', 0, 0]),
+            Some("image/png")
+        );
         assert_eq!(detect_mime(&[0xFF, 0xD8, 0xFF, 0, 0]), Some("image/jpeg"));
         let mut webp = b"RIFF".to_vec();
         webp.extend_from_slice(&[0, 0, 0, 0]);
@@ -415,7 +425,7 @@ mod tests {
 
     #[test]
     fn cache_paths_are_scoped_per_user_and_kind() {
-        let dir = std::env::temp_dir().join(format!("erlc-cad-roblox-{}", std::process::id()));
+        let dir = crate::util::unique_temp_dir("roblox");
         let client = RobloxClient::new(&dir).unwrap();
         assert!(client
             .cache_path(42, AvatarKind::Headshot)

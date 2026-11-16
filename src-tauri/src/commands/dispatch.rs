@@ -97,10 +97,7 @@ pub fn detach_player_from_call(
 }
 
 #[tauri::command]
-pub fn list_units(
-    state: State<'_, AppContext>,
-    token: String,
-) -> Result<Vec<UnitView>, AppError> {
+pub fn list_units(state: State<'_, AppContext>, token: String) -> Result<Vec<UnitView>, AppError> {
     let access = state.authenticate(&token)?;
     dispatch::units(&state, &access)
 }

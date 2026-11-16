@@ -34,7 +34,9 @@ fn map_unit(row: &rusqlite::Row<'_>) -> rusqlite::Result<UnitView> {
         label: row.get("label")?,
         team: row.get("team")?,
         status: row.get("status")?,
-        roblox_user_id: row.get::<_, Option<i64>>("roblox_user_id")?.map(|v| v as u64),
+        roblox_user_id: row
+            .get::<_, Option<i64>>("roblox_user_id")?
+            .map(|v| v as u64),
         assigned_call_id: row.get("assigned_call_id")?,
         updated_at: row.get("updated_at")?,
     })
@@ -263,7 +265,12 @@ impl Database {
         self.call_by_id(id)
     }
 
-    pub fn add_call_player(&self, call_id: i64, roblox_user_id: u64, username: &str) -> AppResult<()> {
+    pub fn add_call_player(
+        &self,
+        call_id: i64,
+        roblox_user_id: u64,
+        username: &str,
+    ) -> AppResult<()> {
         let conn = self.lock()?;
         conn.execute(
             "INSERT OR IGNORE INTO call_players (call_id, roblox_user_id, username) VALUES (?1, ?2, ?3)",
@@ -493,8 +500,12 @@ mod tests {
     #[test]
     fn assigns_sequential_call_numbers_starting_at_1001() {
         let db = Database::open_in_memory().unwrap();
-        let first = db.create_call(&new_call("Structure fire"), None, "Owner").unwrap();
-        let second = db.create_call(&new_call("Traffic stop"), None, "Owner").unwrap();
+        let first = db
+            .create_call(&new_call("Structure fire"), None, "Owner")
+            .unwrap();
+        let second = db
+            .create_call(&new_call("Traffic stop"), None, "Owner")
+            .unwrap();
         assert_eq!(first.call_number, 1001);
         assert_eq!(second.call_number, 1002);
         assert_eq!(first.status, "open");
@@ -503,7 +514,9 @@ mod tests {
     #[test]
     fn closing_a_call_releases_units() {
         let db = Database::open_in_memory().unwrap();
-        let call = db.create_call(&new_call("Collision"), None, "Owner").unwrap();
+        let call = db
+            .create_call(&new_call("Collision"), None, "Owner")
+            .unwrap();
         let unit = db
             .create_unit("1A-1", "Patrol", "Police", "available", None, None)
             .unwrap();
@@ -513,7 +526,9 @@ mod tests {
         assert_eq!(updated.units.len(), 1);
         assert_eq!(updated.units[0].status, "en_route");
 
-        let closed = db.set_call_status(call.id, "closed", Some("Owner")).unwrap();
+        let closed = db
+            .set_call_status(call.id, "closed", Some("Owner"))
+            .unwrap();
         assert_eq!(closed.status, "closed");
         assert!(closed.closed_at.is_some());
         let unit = db.list_units().unwrap().into_iter().next().unwrap();
@@ -545,8 +560,12 @@ mod tests {
     #[test]
     fn mirrors_erlc_calls_once() {
         let db = Database::open_in_memory().unwrap();
-        assert!(db.mirror_emergency_call(12, "Robbery", "Store robbery", "302 Park Ave").unwrap());
-        assert!(!db.mirror_emergency_call(12, "Robbery", "Store robbery", "302 Park Ave").unwrap());
+        assert!(db
+            .mirror_emergency_call(12, "Robbery", "Store robbery", "302 Park Ave")
+            .unwrap());
+        assert!(!db
+            .mirror_emergency_call(12, "Robbery", "Store robbery", "302 Park Ave")
+            .unwrap());
         assert_eq!(db.count_calls().unwrap(), 1);
     }
 }

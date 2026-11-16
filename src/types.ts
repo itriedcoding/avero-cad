@@ -1,6 +1,5 @@
 // Types mirror the Rust view models in crates/erlc-cad-core/src/models.rs.
 
-export type Nullable<T> = T | null;
 
 export interface ApiError {
   code: string;

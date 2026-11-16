@@ -187,7 +187,9 @@ pub fn change_password(
         .user_by_id(access.user_id)?
         .ok_or_else(|| AppError::not_found("Staff account not found."))?;
     if !verify_password(&user.password_hash, current_password) {
-        return Err(AppError::unauthorized("Your current password is incorrect."));
+        return Err(AppError::unauthorized(
+            "Your current password is incorrect.",
+        ));
     }
     if verify_password(&user.password_hash, new_password) {
         return Err(AppError::validation(

@@ -105,7 +105,11 @@ impl AppContext {
     }
 
     pub fn api_key_last4(&self) -> AppResult<Option<String>> {
-        Ok(self.secrets.load()?.as_deref().map(crate::security::mask_key))
+        Ok(self
+            .secrets
+            .load()?
+            .as_deref()
+            .map(crate::security::mask_key))
     }
 
     /// Build (and cache) the ER:LC API client from the stored key.
@@ -274,13 +278,9 @@ mod tests {
 
         impl TempDirGuard {
             pub fn new() -> Self {
-                let path = std::env::temp_dir().join(format!(
-                    "erlc-cad-ctx-{}-{}",
-                    std::process::id(),
-                    crate::util::now_ms()
-                ));
-                std::fs::create_dir_all(&path).unwrap();
-                Self { path }
+                Self {
+                    path: crate::util::unique_temp_dir("ctx"),
+                }
             }
         }
 

@@ -42,7 +42,11 @@ fn record_outcome(
     outcome: &Result<CommandResultView, AppError>,
 ) -> AppResult<()> {
     let (success, message, command_id) = match outcome {
-        Ok(result) => (true, Some(result.message.clone()), result.command_id.clone()),
+        Ok(result) => (
+            true,
+            Some(result.message.clone()),
+            result.command_id.clone(),
+        ),
         Err(err) => (false, Some(err.message()), err.command_id()),
     };
     ctx.db.insert_moderation_record(&NewModerationRecord {
@@ -73,6 +77,7 @@ fn record_outcome(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_action(
     ctx: &AppContext,
     access: &Access,
@@ -191,9 +196,7 @@ pub fn create_internal_ban(
         moderator_name: &access.display_name,
         success: true,
         command_id: None,
-        api_message: Some(
-            "Internal CAD-only ban. This does not ban the player in ER:LC.",
-        ),
+        api_message: Some("Internal CAD-only ban. This does not ban the player in ER:LC."),
     })?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),

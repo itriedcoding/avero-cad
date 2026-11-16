@@ -8,9 +8,7 @@
 
 use crate::api::parse_bans;
 use crate::error::{AppError, AppResult};
-use crate::models::{
-    CommandApiResponse, LiveBanView, RateLimitView, ServerInfo, ServerSummary,
-};
+use crate::models::{CommandApiResponse, LiveBanView, RateLimitView, ServerInfo, ServerSummary};
 use crate::util::{log_line, now_ms};
 use reqwest::{Method, Response, StatusCode};
 use serde_json::Value;
@@ -90,9 +88,7 @@ impl ApiClient {
     pub fn new(base_url: &str, api_key: &str, log_path: Option<&Path>) -> AppResult<Self> {
         let trimmed_base = base_url.trim().trim_end_matches('/');
         if !trimmed_base.starts_with("https://") {
-            return Err(AppError::validation(
-                "The API base URL must use HTTPS.",
-            ));
+            return Err(AppError::validation("The API base URL must use HTTPS."));
         }
         if api_key.trim().is_empty() {
             return Err(AppError::validation("A server key is required."));
@@ -250,10 +246,7 @@ impl ApiClient {
         };
 
         if status == StatusCode::TOO_MANY_REQUESTS {
-            let retry_after = self
-                .retry_delay()
-                .as_secs()
-                .max(1);
+            let retry_after = self.retry_delay().as_secs().max(1);
             return Err(AppError::RateLimited {
                 message: format!(
                     "ER:LC is rate limiting this application. Retry in about {retry_after} second(s)."
@@ -296,10 +289,9 @@ impl ApiClient {
                     return Ok((value, meta));
                 }
                 Err(err) => {
-                    let retryable = matches!(
-                        err,
-                        AppError::RateLimited { .. } | AppError::Network(_)
-                    ) || matches!(err.http_status(), Some(status) if status >= 500);
+                    let retryable =
+                        matches!(err, AppError::RateLimited { .. } | AppError::Network(_))
+                            || matches!(err.http_status(), Some(status) if status >= 500);
                     if !retryable || attempt >= 3 {
                         return Err(err);
                     }
@@ -315,10 +307,7 @@ impl ApiClient {
         }
     }
 
-    pub async fn fetch_server(
-        &self,
-        query: ServerQuery,
-    ) -> AppResult<(ServerInfo, ResponseMeta)> {
+    pub async fn fetch_server(&self, query: ServerQuery) -> AppResult<(ServerInfo, ResponseMeta)> {
         let params = [
             ("Players", query.players),
             ("Staff", query.staff),
@@ -414,10 +403,12 @@ fn map_error(status: StatusCode, parsed: Option<&Value>, raw: &str) -> AppError 
                 trimmed.chars().take(300).collect()
             }
         });
-    let code = parsed
-        .and_then(|v| v.get("code").and_then(|c| c.as_i64()));
-    let command_id = parsed
-        .and_then(|v| v.get("commandId").and_then(|c| c.as_str()).map(str::to_string));
+    let code = parsed.and_then(|v| v.get("code").and_then(|c| c.as_i64()));
+    let command_id = parsed.and_then(|v| {
+        v.get("commandId")
+            .and_then(|c| c.as_str())
+            .map(str::to_string)
+    });
 
     match status {
         StatusCode::FORBIDDEN | StatusCode::UNAUTHORIZED => AppError::Unauthorized(format!(

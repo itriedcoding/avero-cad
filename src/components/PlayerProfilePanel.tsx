@@ -183,7 +183,6 @@ export function PlayerProfilePanel({
           <SectionTitle>Moderation history</SectionTitle>
           <div className="panel overflow-hidden">
             <DataTable<ModerationRecordView>
-              dense
               columns={[
                 {
                   key: "action",

@@ -11,14 +11,25 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let data_dir = app.path().app_data_dir().map_err(|err| {
-                std::io::Error::other(format!("Could not resolve the application data folder: {err}"))
+                std::io::Error::other(format!(
+                    "Could not resolve the application data folder: {err}"
+                ))
             })?;
             let ctx = AppContext::new(&data_dir).map_err(|err| {
-                std::io::Error::other(format!("Could not open the CAD database: {}", err.message()))
+                std::io::Error::other(format!(
+                    "Could not open the CAD database: {}",
+                    err.message()
+                ))
             })?;
-            ctx.log("info", &format!("ER:LC CAD starting (data dir: {})", data_dir.display()));
+            ctx.log(
+                "info",
+                &format!("ER:LC CAD starting (data dir: {})", data_dir.display()),
+            );
             if let Err(err) = settings::auto_backup_if_due(&ctx) {
-                ctx.log("warn", &format!("Automatic backup skipped: {}", err.message()));
+                ctx.log(
+                    "warn",
+                    &format!("Automatic backup skipped: {}", err.message()),
+                );
             }
             app.manage(ctx);
 
@@ -31,7 +42,10 @@ pub fn run() {
                     ticker.tick().await;
                     let ctx = handle.state::<AppContext>();
                     if let Err(err) = settings::auto_backup_if_due(&ctx) {
-                        ctx.log("warn", &format!("Automatic backup skipped: {}", err.message()));
+                        ctx.log(
+                            "warn",
+                            &format!("Automatic backup skipped: {}", err.message()),
+                        );
                     }
                 }
             });

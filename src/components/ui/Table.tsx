@@ -19,7 +19,6 @@ interface DataTableProps<T> {
   emptyTitle: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
-  dense?: boolean;
   onRowClick?: (row: T) => void;
   selectedKey?: string | number | null;
   maxHeight?: string;
@@ -33,15 +32,14 @@ export function DataTable<T>({
   emptyTitle,
   emptyDescription,
   emptyAction,
-  dense,
   onRowClick,
   selectedKey,
   maxHeight,
   footer,
 }: DataTableProps<T>) {
-  // The global "compact tables" preference applies unless a page opts out explicitly.
-  const compactPreference = useSnapshotOptional()?.settings?.compactTables ?? false;
-  const denseRows = dense ?? compactPreference;
+  // Row density follows the global "compact tables" setting; tables render outside the
+  // provider (none today) fall back to comfortable rows.
+  const denseRows = useSnapshotOptional()?.settings?.compactTables ?? false;
 
   if (rows.length === 0) {
     return (

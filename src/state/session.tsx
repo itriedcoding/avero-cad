@@ -213,9 +213,3 @@ export function useSession(): SessionContextValue {
   if (!context) throw new Error("useSession must be used inside SessionProvider");
   return context;
 }
-
-/** Token for IPC calls; throws a helpful error when signed out. */
-export function useToken(): string {
-  const { token } = useSession();
-  return token ?? "";
-}

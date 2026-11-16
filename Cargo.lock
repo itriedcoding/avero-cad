@@ -884,8 +884,6 @@ name = "erlc-cad"
 version = "1.0.0"
 dependencies = [
  "erlc-cad-core",
- "serde",
- "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",

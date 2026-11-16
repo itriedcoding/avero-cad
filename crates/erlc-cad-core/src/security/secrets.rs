@@ -13,9 +13,6 @@ use std::path::{Path, PathBuf};
 
 pub const KEY_FILE_NAME: &str = "server-key.bin";
 
-/// Binds the ciphertext to this application (DPAPI optional entropy).
-const ENTROPY: &[u8] = b"erlc-cad/server-key/v1";
-
 pub struct SecretStore {
     dir: PathBuf,
     storage: &'static str,
@@ -159,6 +156,9 @@ mod platform {
         CryptProtectData, CryptUnprotectData, CRYPTPROTECT_UI_FORBIDDEN, CRYPT_INTEGER_BLOB,
     };
 
+    /// Binds the ciphertext to this application (DPAPI optional entropy).
+    const ENTROPY: &[u8] = b"erlc-cad/server-key/v1";
+
     fn blob(data: &[u8]) -> CRYPT_INTEGER_BLOB {
         CRYPT_INTEGER_BLOB {
             cbData: data.len() as u32,
@@ -167,9 +167,8 @@ mod platform {
     }
 
     pub fn protect(plain: &[u8]) -> AppResult<Vec<u8>> {
-        let entropy = super::ENTROPY;
         let input = blob(plain);
-        let entropy_blob = blob(entropy);
+        let entropy_blob = blob(ENTROPY);
         let mut output = CRYPT_INTEGER_BLOB {
             cbData: 0,
             pbData: std::ptr::null_mut(),
@@ -200,9 +199,8 @@ mod platform {
     }
 
     pub fn unprotect(cipher: &[u8]) -> AppResult<Vec<u8>> {
-        let entropy = super::ENTROPY;
         let input = blob(cipher);
-        let entropy_blob = blob(entropy);
+        let entropy_blob = blob(ENTROPY);
         let mut output = CRYPT_INTEGER_BLOB {
             cbData: 0,
             pbData: std::ptr::null_mut(),
@@ -269,15 +267,7 @@ mod tests {
 
     impl TempDir {
         fn new(name: &str) -> Self {
-            let mut path = std::env::temp_dir();
-            path.push(format!(
-                "erlc-cad-test-{}-{}-{}",
-                name,
-                std::process::id(),
-                crate::util::now_ms()
-            ));
-            fs::create_dir_all(&path).unwrap();
-            Self(path)
+            Self(crate::util::unique_temp_dir(name))
         }
     }
 

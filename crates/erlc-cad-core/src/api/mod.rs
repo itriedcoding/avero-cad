@@ -38,11 +38,10 @@ pub fn parse_bans(value: &Value) -> Vec<LiveBanView> {
             map.iter()
                 .filter_map(|(id_key, name_value)| {
                     let username = name_value.as_str().map(str::to_string);
-                    let user_id = id_key.parse::<u64>().ok().or_else(|| {
-                        username
-                            .as_deref()
-                            .and_then(|name| split_player(name).1)
-                    });
+                    let user_id = id_key
+                        .parse::<u64>()
+                        .ok()
+                        .or_else(|| username.as_deref().and_then(|name| split_player(name).1));
                     if username.is_none() && user_id.is_none() {
                         return None;
                     }
@@ -82,15 +81,17 @@ fn ban_from_value(value: &Value) -> Option<LiveBanView> {
                 .iter()
                 .find_map(|k| map.get(*k).and_then(|v| v.as_str()))
                 .map(str::to_string);
-            let id = ["PlayerId", "playerId", "id", "Id", "userId", "UserId", "UserId "]
-                .iter()
-                .find_map(|k| {
-                    map.get(*k).and_then(|v| {
-                        v.as_u64()
-                            .or_else(|| v.as_str().and_then(|s| s.parse::<u64>().ok()))
-                            .or_else(|| v.as_str().and_then(|s| split_player(s).1))
-                    })
-                });
+            let id = [
+                "PlayerId", "playerId", "id", "Id", "userId", "UserId", "UserId ",
+            ]
+            .iter()
+            .find_map(|k| {
+                map.get(*k).and_then(|v| {
+                    v.as_u64()
+                        .or_else(|| v.as_str().and_then(|s| s.parse::<u64>().ok()))
+                        .or_else(|| v.as_str().and_then(|s| split_player(s).1))
+                })
+            });
             if name.is_none() && id.is_none() {
                 return None;
             }
@@ -99,7 +100,11 @@ fn ban_from_value(value: &Value) -> Option<LiveBanView> {
                 .map(split_player)
                 .unwrap_or((String::new(), None));
             Some(LiveBanView {
-                username: if username.is_empty() { None } else { Some(username) },
+                username: if username.is_empty() {
+                    None
+                } else {
+                    Some(username)
+                },
                 roblox_user_id: id.or(split_id),
                 raw: value.to_string(),
             })
@@ -123,7 +128,8 @@ mod tests {
 
     #[test]
     fn parses_array_of_objects() {
-        let value = serde_json::json!([{ "PlayerId": "troll:123" }, { "username": "bob", "id": 9 }]);
+        let value =
+            serde_json::json!([{ "PlayerId": "troll:123" }, { "username": "bob", "id": 9 }]);
         let bans = parse_bans(&value);
         assert_eq!(bans.len(), 2);
         assert_eq!(bans[0].roblox_user_id, Some(123));

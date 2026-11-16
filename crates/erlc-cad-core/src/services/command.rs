@@ -38,7 +38,9 @@ pub fn validate(raw: &str) -> AppResult<ValidatedCommand> {
         ));
     }
     if trimmed.chars().count() > 300 {
-        return Err(AppError::validation("Commands are limited to 300 characters."));
+        return Err(AppError::validation(
+            "Commands are limited to 300 characters.",
+        ));
     }
     if trimmed
         .chars()
@@ -53,10 +55,7 @@ pub fn validate(raw: &str) -> AppResult<ValidatedCommand> {
         .find(char::is_whitespace)
         .unwrap_or(without_colon.len());
     let name = without_colon[..name_end].to_ascii_lowercase();
-    if name.is_empty()
-        || name.len() > 24
-        || !name.chars().all(|c| c.is_ascii_alphanumeric())
-    {
+    if name.is_empty() || name.len() > 24 || !name.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Err(AppError::validation(
             "Command names may only contain letters and numbers after the colon.",
         ));
@@ -121,7 +120,10 @@ pub async fn execute(
             ctx,
             access,
             &command.raw,
-            &format!("\"{}\" is currently disabled by the Server Owner.", command.name),
+            &format!(
+                "\"{}\" is currently disabled by the Server Owner.",
+                command.name
+            ),
         );
     }
     let Some(required) = Permission::from_key(&policy.min_permission) else {
@@ -236,7 +238,11 @@ pub async fn execute_moderation_command(
     execute(ctx, access, raw, confirmed).await
 }
 
-pub fn history(ctx: &AppContext, access: &Access, limit: usize) -> AppResult<Vec<CommandHistoryView>> {
+pub fn history(
+    ctx: &AppContext,
+    access: &Access,
+    limit: usize,
+) -> AppResult<Vec<CommandHistoryView>> {
     access.require(Permission::CommandsView)?;
     ctx.db.list_command_history(limit.clamp(1, 500))
 }
@@ -257,13 +263,8 @@ pub fn upsert_policy(
 ) -> AppResult<()> {
     access.require(Permission::CommandsPoliciesManage)?;
     let description = require_text(description, "Description", 0, 300).unwrap_or_default();
-    ctx.db.upsert_command_policy(
-        command,
-        min_permission,
-        destructive,
-        enabled,
-        &description,
-    )?;
+    ctx.db
+        .upsert_command_policy(command, min_permission, destructive, enabled, &description)?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,

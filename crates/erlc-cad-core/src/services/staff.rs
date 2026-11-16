@@ -96,15 +96,12 @@ pub fn update_role(
     Ok(())
 }
 
-pub fn set_active(
-    ctx: &AppContext,
-    access: &Access,
-    user_id: i64,
-    active: bool,
-) -> AppResult<()> {
+pub fn set_active(ctx: &AppContext, access: &Access, user_id: i64, active: bool) -> AppResult<()> {
     access.require(Permission::StaffManage)?;
     if access.user_id == user_id && !active {
-        return Err(AppError::conflict("You cannot deactivate your own account."));
+        return Err(AppError::conflict(
+            "You cannot deactivate your own account.",
+        ));
     }
     if !active {
         ensure_not_last_owner(ctx, user_id)?;
@@ -208,9 +205,7 @@ pub fn create_role(
     permissions: Vec<String>,
 ) -> AppResult<i64> {
     access.require(Permission::RolesManage)?;
-    let id = ctx
-        .db
-        .create_role(key, name, description, &permissions)?;
+    let id = ctx.db.create_role(key, name, description, &permissions)?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,

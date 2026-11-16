@@ -58,7 +58,9 @@ impl Database {
             source,
             OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
         )
-        .map_err(|err| AppError::validation(format!("That file is not a SQLite database: {err}")))?;
+        .map_err(|err| {
+            AppError::validation(format!("That file is not a SQLite database: {err}"))
+        })?;
 
         let integrity: String = src
             .query_row("PRAGMA integrity_check", [], |row| row.get(0))
@@ -135,13 +137,7 @@ mod tests {
     use crate::permissions::ROLE_OWNER;
 
     fn temp_dir(name: &str) -> PathBuf {
-        let path = std::env::temp_dir().join(format!(
-            "erlc-cad-backup-{name}-{}-{}",
-            std::process::id(),
-            now_ms()
-        ));
-        std::fs::create_dir_all(&path).unwrap();
-        path
+        crate::util::unique_temp_dir(&format!("backup-{name}"))
     }
 
     #[test]

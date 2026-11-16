@@ -125,7 +125,6 @@ export default function EmergencyCallsPage() {
             </div>
           ) : (
             <DataTable<CallView>
-              dense
               columns={[
                 {
                   key: "number",

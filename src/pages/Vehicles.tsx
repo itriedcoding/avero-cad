@@ -69,7 +69,6 @@ export default function VehiclesPage() {
           </div>
         ) : (
           <DataTable<VehicleView>
-            dense
             columns={[
               {
                 key: "name",

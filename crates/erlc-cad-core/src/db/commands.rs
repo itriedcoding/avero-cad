@@ -121,10 +121,7 @@ impl Database {
                 "Command policies must start with \":\" (for example \":kick\").",
             ));
         }
-        if normalized[1..]
-            .chars()
-            .any(|c| !c.is_ascii_alphanumeric())
-        {
+        if normalized[1..].chars().any(|c| !c.is_ascii_alphanumeric()) {
             return Err(AppError::validation(
                 "Command names may only contain letters and numbers after the colon.",
             ));
@@ -173,14 +170,22 @@ mod tests {
         let db = Database::open_in_memory().unwrap();
         let policies = db.command_policies().unwrap();
         assert!(policies.iter().any(|p| p.command == ":h"));
-        assert!(policies.iter().any(|p| p.command == ":ban" && p.destructive));
+        assert!(policies
+            .iter()
+            .any(|p| p.command == ":ban" && p.destructive));
     }
 
     #[test]
     fn upserts_and_deletes_policies() {
         let db = Database::open_in_memory().unwrap();
-        db.upsert_command_policy(":respawn", "commands.execute", true, true, "Respawn vehicles")
-            .unwrap();
+        db.upsert_command_policy(
+            ":respawn",
+            "commands.execute",
+            true,
+            true,
+            "Respawn vehicles",
+        )
+        .unwrap();
         let policy = db.command_policy(":respawn").unwrap().unwrap();
         assert!(policy.destructive);
         db.upsert_command_policy(":respawn", "commands.execute", false, false, "")

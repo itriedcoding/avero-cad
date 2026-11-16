@@ -26,7 +26,9 @@ pub struct NewModerationRecord<'a> {
 fn map_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<ModerationRecordView> {
     Ok(ModerationRecordView {
         id: row.get("id")?,
-        roblox_user_id: row.get::<_, Option<i64>>("roblox_user_id")?.map(|v| v as u64),
+        roblox_user_id: row
+            .get::<_, Option<i64>>("roblox_user_id")?
+            .map(|v| v as u64),
         username: row.get("username")?,
         action: row.get("action")?,
         source: row.get("source")?,
@@ -42,7 +44,9 @@ fn map_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<ModerationRecordView>
 fn map_ban(row: &rusqlite::Row<'_>) -> rusqlite::Result<InternalBanView> {
     Ok(InternalBanView {
         id: row.get("id")?,
-        roblox_user_id: row.get::<_, Option<i64>>("roblox_user_id")?.map(|v| v as u64),
+        roblox_user_id: row
+            .get::<_, Option<i64>>("roblox_user_id")?
+            .map(|v| v as u64),
         username: row.get("username")?,
         reason: row.get("reason")?,
         created_by_name: row.get("created_by_name")?,
@@ -56,8 +60,15 @@ fn map_ban(row: &rusqlite::Row<'_>) -> rusqlite::Result<InternalBanView> {
 
 impl Database {
     pub fn insert_moderation_record(&self, record: &NewModerationRecord<'_>) -> AppResult<i64> {
-        if !["kick", "ban", "unban", "internal_ban", "internal_unban", "note"]
-            .contains(&record.action)
+        if ![
+            "kick",
+            "ban",
+            "unban",
+            "internal_ban",
+            "internal_unban",
+            "note",
+        ]
+        .contains(&record.action)
         {
             return Err(AppError::validation("Unknown moderation action."));
         }
@@ -129,7 +140,11 @@ impl Database {
 
     pub fn count_moderation_records(&self) -> AppResult<i64> {
         let conn = self.lock()?;
-        Ok(conn.query_row("SELECT COUNT(*) FROM moderation_records", [], |row| row.get(0))?)
+        Ok(
+            conn.query_row("SELECT COUNT(*) FROM moderation_records", [], |row| {
+                row.get(0)
+            })?,
+        )
     }
 
     pub fn create_internal_ban(
@@ -191,9 +206,7 @@ impl Database {
             ],
         )?;
         if changed == 0 {
-            return Err(AppError::not_found(
-                "No active internal ban with that ID.",
-            ));
+            return Err(AppError::not_found("No active internal ban with that ID."));
         }
         Ok(())
     }
@@ -221,7 +234,11 @@ impl Database {
         Ok(ban)
     }
 
-    pub fn list_internal_bans(&self, active_only: bool, limit: usize) -> AppResult<Vec<InternalBanView>> {
+    pub fn list_internal_bans(
+        &self,
+        active_only: bool,
+        limit: usize,
+    ) -> AppResult<Vec<InternalBanView>> {
         let conn = self.lock()?;
         let mut stmt = conn.prepare(
             "SELECT id, roblox_user_id, username, reason, created_by_name, created_at,
@@ -231,7 +248,10 @@ impl Database {
              ORDER BY active DESC, created_at DESC LIMIT ?2",
         )?;
         let rows = stmt
-            .query_map(params![if active_only { 1 } else { 0 }, limit as i64], map_ban)?
+            .query_map(
+                params![if active_only { 1 } else { 0 }, limit as i64],
+                map_ban,
+            )?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(rows)
     }
@@ -241,7 +261,11 @@ impl Database {
         Ok(conn.query_row("SELECT COUNT(*) FROM internal_bans", [], |row| row.get(0))?)
     }
 
-    pub fn internal_ban_count_for(&self, roblox_user_id: Option<u64>, username: &str) -> AppResult<i64> {
+    pub fn internal_ban_count_for(
+        &self,
+        roblox_user_id: Option<u64>,
+        username: &str,
+    ) -> AppResult<i64> {
         let conn = self.lock()?;
         Ok(conn.query_row(
             "SELECT COUNT(*) FROM internal_bans
@@ -310,7 +334,8 @@ mod tests {
             .unwrap_err();
         assert_eq!(err.code(), "conflict");
         assert!(db.active_internal_ban(Some(7), "Troll").unwrap().is_some());
-        db.lift_internal_ban(id, "Owner", "Appeal accepted").unwrap();
+        db.lift_internal_ban(id, "Owner", "Appeal accepted")
+            .unwrap();
         assert!(db.active_internal_ban(Some(7), "Troll").unwrap().is_none());
         assert_eq!(db.internal_ban_count_for(Some(7), "Troll").unwrap(), 1);
     }

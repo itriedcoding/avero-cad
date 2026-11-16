@@ -100,7 +100,7 @@ export default function ServerCommandsPage() {
       toast.error("Command not authorized", "A Server Owner must add this command to Command Policies.");
       return;
     }
-    if (requiresConfirmation || policy.destructive) {
+    if (requiresConfirmation) {
       setConfirmedCommand(raw);
       return;
     }
@@ -263,10 +263,15 @@ export default function ServerCommandsPage() {
                 {parsed.name} is not authorized. Add it to Command Policies first.
               </p>
             ) : null}
-            {policy?.destructive ? (
+            {requiresConfirmation ? (
               <p className="flex items-center gap-1.5 text-[11px] text-muted">
                 <ShieldAlert size={12} /> Destructive command — confirmation is required before it is
                 sent.
+              </p>
+            ) : policy?.destructive ? (
+              <p className="flex items-center gap-1.5 text-[11px] text-muted">
+                <ShieldAlert size={12} /> Destructive command — extra confirmation is disabled in
+                Settings.
               </p>
             ) : null}
             {!has("commands.execute") ? (
@@ -329,7 +334,6 @@ export default function ServerCommandsPage() {
               </div>
             ) : (
               <DataTable<CommandPolicyView>
-                dense
                 columns={[
                   {
                     key: "command",
@@ -415,7 +419,6 @@ export default function ServerCommandsPage() {
       <SectionTitle>Execution history</SectionTitle>
       <Panel>
         <DataTable<CommandHistoryView>
-          dense
           columns={[
             {
               key: "command",

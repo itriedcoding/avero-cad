@@ -181,7 +181,6 @@ export default function ModerationPage() {
               <TableSkeleton rows={8} columns={4} />
             ) : (
               <DataTable<ModerationRecordView>
-                dense
                 columns={[
                   {
                     key: "action",

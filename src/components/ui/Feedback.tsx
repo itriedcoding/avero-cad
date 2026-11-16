@@ -26,14 +26,6 @@ export function PageHeader({
   );
 }
 
-export function Toolbar({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex flex-wrap items-center gap-2 border-b border-line px-3.5 py-2.5", className)}>
-      {children}
-    </div>
-  );
-}
-
 export function EmptyState({
   title,
   description,

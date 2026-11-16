@@ -198,7 +198,19 @@ impl Database {
     }
 
     pub fn list_staff_users(&self) -> AppResult<Vec<StaffUserView>> {
-        let rows: Vec<(i64, String, String, i64, String, String, Option<i64>, bool, i64, Option<i64>)> = {
+        type StaffRow = (
+            i64,
+            String,
+            String,
+            i64,
+            String,
+            String,
+            Option<i64>,
+            bool,
+            i64,
+            Option<i64>,
+        );
+        let rows: Vec<StaffRow> = {
             let conn = self.lock()?;
             let mut stmt = conn.prepare(
                 "SELECT u.id, u.username, u.display_name, u.role_id, r.key, r.name,
@@ -226,7 +238,19 @@ impl Database {
         };
 
         let mut users = Vec::with_capacity(rows.len());
-        for (id, username, display_name, role_id, role_key, role_name, roblox_user_id, is_active, created_at, last_login_at) in rows {
+        for (
+            id,
+            username,
+            display_name,
+            role_id,
+            role_key,
+            role_name,
+            roblox_user_id,
+            is_active,
+            created_at,
+            last_login_at,
+        ) in rows
+        {
             users.push(StaffUserView {
                 id,
                 username,
@@ -335,7 +359,12 @@ impl Database {
         Ok(())
     }
 
-    pub fn record_login_failure(&self, user_id: i64, lock_after: i64, lock_minutes: i64) -> AppResult<(i64, Option<i64>)> {
+    pub fn record_login_failure(
+        &self,
+        user_id: i64,
+        lock_after: i64,
+        lock_minutes: i64,
+    ) -> AppResult<(i64, Option<i64>)> {
         let conn = self.lock()?;
         conn.execute(
             "UPDATE app_users SET failed_attempts = failed_attempts + 1 WHERE id = ?1",
@@ -410,9 +439,20 @@ impl Database {
         Ok(roles)
     }
 
-    pub fn create_role(&self, key: &str, name: &str, description: &str, permissions: &[String]) -> AppResult<i64> {
+    pub fn create_role(
+        &self,
+        key: &str,
+        name: &str,
+        description: &str,
+        permissions: &[String],
+    ) -> AppResult<i64> {
         let key = key.trim().to_ascii_lowercase();
-        if key.len() < 3 || key.len() > 32 || !key.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-') {
+        if key.len() < 3
+            || key.len() > 32
+            || !key
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-')
+        {
             return Err(AppError::validation(
                 "Role keys must be 3-32 lowercase letters, numbers, dashes or underscores.",
             ));
@@ -613,7 +653,12 @@ mod tests {
     fn custom_roles_can_be_created_and_assigned_but_not_system_roles_deleted() {
         let (db, _) = db_with_owner();
         let role_id = db
-            .create_role("dispatcher", "Dispatcher", "Calls only", &["dispatch.view".into(), "dispatch.create".into()])
+            .create_role(
+                "dispatcher",
+                "Dispatcher",
+                "Calls only",
+                &["dispatch.view".into(), "dispatch.create".into()],
+            )
             .unwrap();
         let access = db.user_by_username("owner").unwrap().unwrap();
         db.update_user_role(access.id, "dispatcher").unwrap();

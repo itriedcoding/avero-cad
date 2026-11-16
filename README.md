@@ -210,8 +210,9 @@ what the API will accept.
 
 - **Credentials** — Windows DPAPI (`CryptProtectData`, current-user scope) encrypts the server key;
   the file lives in the application data directory. The database stores only metadata (base URL,
-  last four characters, fingerprint, verification time). This build has no plaintext fallback and
-  refuses to persist a key if protection fails.
+  last four characters, fingerprint, verification time). Windows builds never fall back to
+  plaintext: if DPAPI fails, the key is not persisted. (Non-Windows development builds use a
+  clearly labelled local file, which no installer ships.)
 - **No secrets in logs** — request/response logging redacts `server-key` headers and the token that
   follows them.
 - **Sessions** — random 256-bit tokens, stored hashed, 12-hour absolute lifetime plus a configurable

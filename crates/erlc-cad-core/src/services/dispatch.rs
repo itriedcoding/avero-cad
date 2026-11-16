@@ -54,6 +54,7 @@ pub fn create_call(
     Ok(call)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn update_call(
     ctx: &AppContext,
     access: &Access,
@@ -66,14 +67,9 @@ pub fn update_call(
 ) -> AppResult<CallView> {
     access.require(Permission::DispatchUpdate)?;
     let title = require_text(title, "Call title", 3, 120)?;
-    let call = ctx.db.update_call_details(
-        call_id,
-        &title,
-        description,
-        location,
-        postal,
-        priority,
-    )?;
+    let call =
+        ctx.db
+            .update_call_details(call_id, &title, description, location, postal, priority)?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,
@@ -159,14 +155,9 @@ pub fn create_unit(
     status: &str,
 ) -> AppResult<UnitView> {
     access.require(Permission::DispatchUnits)?;
-    let unit = ctx.db.create_unit(
-        callsign,
-        label,
-        team,
-        status,
-        None,
-        Some(access.user_id),
-    )?;
+    let unit = ctx
+        .db
+        .create_unit(callsign, label, team, status, None, Some(access.user_id))?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,

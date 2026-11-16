@@ -13,6 +13,25 @@ pub fn now_ms() -> i64 {
         .unwrap_or(0)
 }
 
+/// Fresh, process-unique temporary directory for tests.
+///
+/// A monotonic counter avoids the millisecond collisions that made parallel
+/// tests share (and delete) each other's database directories.
+#[cfg(test)]
+pub fn unique_temp_dir(prefix: &str) -> std::path::PathBuf {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let sequence = COUNTER.fetch_add(1, Ordering::Relaxed);
+    let path = std::env::temp_dir().join(format!(
+        "erlc-cad-{prefix}-{}-{sequence}",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&path);
+    std::fs::create_dir_all(&path).expect("create test temp dir");
+    path
+}
+
 /// Replace anything that looks like a credential with a fixed marker.
 ///
 /// Handles both `server-key: VALUE` and `server-key VALUE` shapes so a secret
@@ -81,17 +100,16 @@ pub fn require_text(value: &str, field: &str, min: usize, max: usize) -> AppResu
         )));
     }
     if trimmed.contains('\n') || trimmed.contains('\r') || trimmed.chars().any(|c| c == '\0') {
-        return Err(AppError::validation(format!("{field} must be a single line.")));
+        return Err(AppError::validation(format!(
+            "{field} must be a single line."
+        )));
     }
     Ok(trimmed.to_string())
 }
 
 /// ER:LC usernames are 3-20 characters of letters, digits and underscores.
 pub fn is_valid_roblox_username(value: &str) -> bool {
-    (3..=20).contains(&value.len())
-        && value
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+    (3..=20).contains(&value.len()) && value.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 pub fn is_valid_username(value: &str) -> bool {

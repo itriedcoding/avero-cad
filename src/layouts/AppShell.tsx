@@ -176,10 +176,11 @@ export default function AppShell() {
     if (startupApplied.current || !settings) return;
     startupApplied.current = true;
     if (window.location.hash) return;
-    if ((ROUTES as readonly string[]).includes(settings.startupPage)) {
-      navigate(settings.startupPage as RouteKey);
+    const target = settings.startupPage as RouteKey;
+    if ((ROUTES as readonly string[]).includes(target) && has(PAGE_PERMISSIONS[target])) {
+      navigate(target);
     }
-  }, [settings]);
+  }, [settings, has]);
 
   useEffect(() => {
     if (!menuOpen) return;

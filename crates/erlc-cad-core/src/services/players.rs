@@ -3,9 +3,7 @@
 use super::{snapshot, AppContext};
 use crate::db::audit::AuditEntry;
 use crate::error::{AppError, AppResult};
-use crate::models::{
-    PlayerProfile, PlayerView, RobloxUserView, SearchResult, StaffNoteView,
-};
+use crate::models::{PlayerProfile, PlayerView, RobloxUserView, SearchResult, StaffNoteView};
 use crate::permissions::{Access, Permission};
 use crate::roblox::AvatarKind;
 use crate::util::{is_valid_roblox_username, require_text};
@@ -44,7 +42,8 @@ pub fn search(ctx: &AppContext, access: &Access, query: &str) -> AppResult<Vec<S
             .as_deref()
             .map(|c| c.to_ascii_lowercase().contains(&needle))
             .unwrap_or(false);
-        if player.username.to_ascii_lowercase().contains(&needle) || id_matches || callsign_matches {
+        if player.username.to_ascii_lowercase().contains(&needle) || id_matches || callsign_matches
+        {
             results.push(SearchResult {
                 roblox_user_id: player.roblox_user_id,
                 username: player.username.clone(),
@@ -76,9 +75,11 @@ pub fn search(ctx: &AppContext, access: &Access, query: &str) -> AppResult<Vec<S
     }
 
     results.sort_by(|a, b| {
-        b.online
-            .cmp(&a.online)
-            .then_with(|| a.username.to_ascii_lowercase().cmp(&b.username.to_ascii_lowercase()))
+        b.online.cmp(&a.online).then_with(|| {
+            a.username
+                .to_ascii_lowercase()
+                .cmp(&b.username.to_ascii_lowercase())
+        })
     });
     results.truncate(50);
     Ok(results)
@@ -174,11 +175,11 @@ pub async fn profile(
     username: Option<String>,
 ) -> AppResult<PlayerProfile> {
     access.require(Permission::PlayersView)?;
-    let (resolved_id, resolved_name) = resolve_identity(ctx, roblox_user_id, username.as_deref()).await?;
+    let (resolved_id, resolved_name) =
+        resolve_identity(ctx, roblox_user_id, username.as_deref()).await?;
 
     let live = live_players(ctx).into_iter().find(|player| {
-        player.roblox_user_id == resolved_id
-            || player.username.eq_ignore_ascii_case(&resolved_name)
+        player.roblox_user_id == resolved_id || player.username.eq_ignore_ascii_case(&resolved_name)
     });
 
     let record = match resolved_id {
@@ -191,11 +192,9 @@ pub async fn profile(
         None => None,
     };
 
-    let moderation = ctx.db.moderation_for_player(
-        resolved_id,
-        &resolved_name,
-        100,
-    )?;
+    let moderation = ctx
+        .db
+        .moderation_for_player(resolved_id, &resolved_name, 100)?;
     let notes = if access.can(Permission::PlayersNotesView) {
         ctx.db.list_staff_notes(resolved_id, &resolved_name, 100)?
     } else {
@@ -217,12 +216,21 @@ pub async fn profile(
                                 .unwrap_or(false)
                     });
                     if banned {
-                        (true, Some("Listed in the live ER:LC server ban list.".to_string()))
+                        (
+                            true,
+                            Some("Listed in the live ER:LC server ban list.".to_string()),
+                        )
                     } else {
-                        (false, Some("Not present in the live ER:LC ban list.".to_string()))
+                        (
+                            false,
+                            Some("Not present in the live ER:LC ban list.".to_string()),
+                        )
                     }
                 }
-                Err(err) => (false, Some(format!("Ban list unavailable: {}", err.message()))),
+                Err(err) => (
+                    false,
+                    Some(format!("Ban list unavailable: {}", err.message())),
+                ),
             },
             None => (false, Some("ER:LC server key not configured.".to_string())),
         }

@@ -189,7 +189,6 @@ export default function StaffManagementPage() {
             <TableSkeleton rows={6} columns={4} />
           ) : (
             <DataTable<StaffUserView>
-              dense
               onRowClick={(row) => setSelectedId(row.id)}
               selectedKey={selected?.id ?? null}
               columns={[
@@ -414,7 +413,6 @@ export default function StaffManagementPage() {
             </div>
           ) : (
             <DataTable<RoleView>
-              dense
               columns={[
                 {
                   key: "role",

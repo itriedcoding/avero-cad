@@ -61,7 +61,9 @@ fn build_players(ctx: &AppContext, info: &ServerInfo) -> Vec<PlayerView> {
         let (username, roblox_user_id) = split_player(&player.player);
         let permission = player.permission.clone().unwrap_or_else(|| "Normal".into());
         let staff_role = match permission.as_str() {
-            "Server Owner" | "Server Administrator" | "Server Moderator" => Some(permission.clone()),
+            "Server Owner" | "Server Administrator" | "Server Moderator" => {
+                Some(permission.clone())
+            }
             _ => None,
         };
         if let Some(id) = roblox_user_id {
@@ -134,7 +136,10 @@ fn build_snapshot(
 
     let counts = RosterCounts {
         total: players.len(),
-        law_enforcement: players.iter().filter(|p| p.service == "law_enforcement").count(),
+        law_enforcement: players
+            .iter()
+            .filter(|p| p.service == "law_enforcement")
+            .count(),
         fire_ems: players.iter().filter(|p| p.service == "fire_ems").count(),
         civilian: players.iter().filter(|p| p.service == "civilian").count(),
         staff: staff_count,
@@ -364,7 +369,7 @@ pub async fn load(ctx: &AppContext, force: bool) -> AppResult<Snapshot> {
             // Notifications for new events, derived by comparing against the
             // previous poll. Only real API events are ever surfaced.
             let mut new_notifications = Vec::new();
-            for call in info.emergency_calls.as_ref().map(|c| c.as_slice()).unwrap_or(&[]) {
+            for call in info.emergency_calls.as_deref().unwrap_or(&[]) {
                 if !cache.seen_emergency.contains(&call.call_number) {
                     new_notifications.push(AppNotification {
                         id: format!("emergency-{}-{}", call.call_number, call.started_at),
@@ -376,7 +381,7 @@ pub async fn load(ctx: &AppContext, force: bool) -> AppResult<Snapshot> {
                     cache.seen_emergency.push(call.call_number);
                 }
             }
-            for call in info.mod_calls.as_ref().map(|c| c.as_slice()).unwrap_or(&[]) {
+            for call in info.mod_calls.as_deref().unwrap_or(&[]) {
                 if !cache.seen_mod_calls.contains(&call.timestamp) {
                     new_notifications.push(AppNotification {
                         id: format!("modcall-{}", call.timestamp),
@@ -403,25 +408,23 @@ pub async fn load(ctx: &AppContext, force: bool) -> AppResult<Snapshot> {
             }
 
             // Mirror live ER:LC emergency calls into CAD dispatch once each.
-            for call in info.emergency_calls.as_ref().map(|c| c.as_slice()).unwrap_or(&[]) {
+            for call in info.emergency_calls.as_deref().unwrap_or(&[]) {
                 if !cache.mirrored_calls.contains(&call.call_number) {
                     let location = if call.position_descriptor.trim().is_empty() {
                         "Location unavailable".to_string()
                     } else {
                         call.position_descriptor.clone()
                     };
-                    if ctx
-                        .db
-                        .mirror_emergency_call(
-                            call.call_number,
-                            &format!("{} call", call.team),
-                            &call.description,
-                            &location,
-                        )
-                        .unwrap_or(false)
-                    {
-                        cache.mirrored_calls.push(call.call_number);
-                    } else {
+                    // Remember the call once the database accepted it (inserted or already
+                    // present). On a database error it is retried on the next poll instead of
+                    // being silently dropped.
+                    let mirrored = ctx.db.mirror_emergency_call(
+                        call.call_number,
+                        &format!("{} call", call.team),
+                        &call.description,
+                        &location,
+                    );
+                    if mirrored.is_ok() {
                         cache.mirrored_calls.push(call.call_number);
                     }
                 }
@@ -456,7 +459,9 @@ pub async fn load(ctx: &AppContext, force: bool) -> AppResult<Snapshot> {
             drop(cache);
 
             // Keep API verification metadata current without extra requests.
-            let _ = ctx.db.mark_api_verified(&info.name, Some(info.owner_id as i64));
+            let _ = ctx
+                .db
+                .mark_api_verified(&info.name, Some(info.owner_id as i64));
             Ok(built.snapshot)
         }
         Err(err) => {

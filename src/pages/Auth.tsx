@@ -116,7 +116,7 @@ export default function AuthPage() {
               type="password"
               value={password}
               autoComplete={needsSetup ? "new-password" : "current-password"}
-              placeholder={needsSetup ? "At least 10 characters with a number" : "••••••••••"}
+              placeholder={needsSetup ? "At least 10 characters" : "••••••••••"}
               onChange={(event) => setPassword(event.target.value)}
             />
             {needsSetup ? (

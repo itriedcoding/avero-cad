@@ -138,7 +138,6 @@ export default function PlayersPage() {
               <TableSkeleton rows={5} columns={3} />
             ) : (
               <DataTable<SearchResult>
-                dense
                 columns={[
                   {
                     key: "player",

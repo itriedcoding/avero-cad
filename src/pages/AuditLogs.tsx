@@ -97,7 +97,6 @@ export default function AuditLogsPage() {
           <TableSkeleton rows={10} columns={5} />
         ) : (
           <DataTable<AuditLogView>
-            dense
             columns={[
               {
                 key: "when",

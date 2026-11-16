@@ -43,7 +43,9 @@ Out of scope:
   characters, a SHA-256 fingerprint and the last verification time.
 - Keys are never returned over IPC after saving, never written to logs (request logging redacts the
   `server-key` header and the token that follows it), and never committed to the repository.
-- If DPAPI protection fails, the key is not persisted at all. There is no plaintext fallback.
+- If DPAPI protection fails, the key is not persisted at all. No Windows build has a plaintext
+  fallback; development builds on other platforms use a clearly labelled local file that no
+  installer ships.
 
 ### Staff authentication
 

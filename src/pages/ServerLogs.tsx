@@ -138,7 +138,6 @@ export default function ServerLogsPage() {
           </div>
         ) : tab === "joins" ? (
           <DataTable<JoinLogView>
-            dense
             columns={[
               { key: "player", header: "Player", render: (row) => <span className="text-[12px] text-ink">{row.username}</span> },
               {
@@ -162,7 +161,6 @@ export default function ServerLogsPage() {
           />
         ) : tab === "leaves" ? (
           <DataTable<JoinLogView>
-            dense
             columns={[
               { key: "player", header: "Player", render: (row) => <span className="text-[12px] text-ink">{row.username}</span> },
               {
@@ -186,7 +184,6 @@ export default function ServerLogsPage() {
           />
         ) : tab === "kills" ? (
           <DataTable<KillLogView>
-            dense
             columns={[
               { key: "killer", header: "Killer", render: (row) => <span className="text-[12px] text-ink">{row.killer}</span> },
               { key: "killed", header: "Killed", render: (row) => <span className="text-[12px] text-muted">{row.killed}</span> },
@@ -206,7 +203,6 @@ export default function ServerLogsPage() {
           />
         ) : tab === "commands" ? (
           <DataTable<CommandLogView>
-            dense
             columns={[
               { key: "player", header: "Player", render: (row) => <span className="text-[12px] text-ink">{row.player}</span> },
               {
@@ -230,7 +226,6 @@ export default function ServerLogsPage() {
           />
         ) : tab === "modcalls" ? (
           <DataTable<ModCallView>
-            dense
             columns={[
               { key: "caller", header: "Caller", render: (row) => <span className="text-[12px] text-ink">{row.caller}</span> },
               {
@@ -261,7 +256,6 @@ export default function ServerLogsPage() {
           empty("Queue is empty", "No players are waiting to join the server right now.")
         ) : (
           <DataTable<QueueEntryView>
-            dense
             columns={[
               { key: "position", header: "Position", render: (row) => <span className="mono text-[12px] text-ink">#{row.position}</span> },
               {

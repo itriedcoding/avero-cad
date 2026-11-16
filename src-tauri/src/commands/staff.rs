@@ -140,7 +140,13 @@ pub fn list_audit_logs(
     limit: usize,
 ) -> Result<Vec<AuditLogView>, AppError> {
     let access = state.authenticate(&token)?;
-    staff::audit_logs(&state, &access, category.as_deref(), query.as_deref(), limit)
+    staff::audit_logs(
+        &state,
+        &access,
+        category.as_deref(),
+        query.as_deref(),
+        limit,
+    )
 }
 
 #[tauri::command]

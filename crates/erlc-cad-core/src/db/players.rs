@@ -268,7 +268,10 @@ mod tests {
         db.upsert_player_presence(456, "Noob", None, None, 2)
             .unwrap();
         assert_eq!(db.search_players("build", 10).unwrap().len(), 1);
-        assert_eq!(db.search_players("123", 10).unwrap()[0].username, "Builderman");
+        assert_eq!(
+            db.search_players("123", 10).unwrap()[0].username,
+            "Builderman"
+        );
         assert_eq!(db.search_players("456", 10).unwrap()[0].username, "Noob");
         assert!(db.search_players("%", 10).unwrap().is_empty());
     }
@@ -276,8 +279,10 @@ mod tests {
     #[test]
     fn lists_players_most_recent_first() {
         let db = Database::open_in_memory().unwrap();
-        db.upsert_player_presence(1, "Older", None, None, 100).unwrap();
-        db.upsert_player_presence(2, "Newer", None, None, 200).unwrap();
+        db.upsert_player_presence(1, "Older", None, None, 100)
+            .unwrap();
+        db.upsert_player_presence(2, "Newer", None, None, 200)
+            .unwrap();
         let players = db.list_players(10).unwrap();
         assert_eq!(players.len(), 2);
         assert_eq!(players[0].username, "Newer");
@@ -290,11 +295,11 @@ mod tests {
             .unwrap();
         db.add_staff_note(Some(2), "Other", None, "Owner", "Unrelated")
             .unwrap();
-        let notes = db
-            .list_staff_notes(Some(1), "Builderman", 50)
-            .unwrap();
+        let notes = db.list_staff_notes(Some(1), "Builderman", 50).unwrap();
         assert_eq!(notes.len(), 1);
         assert_eq!(notes[0].body, "Watch this player");
-        assert!(db.add_staff_note(Some(1), "Builderman", None, "Owner", "   ").is_err());
+        assert!(db
+            .add_staff_note(Some(1), "Builderman", None, "Owner", "   ")
+            .is_err());
     }
 }

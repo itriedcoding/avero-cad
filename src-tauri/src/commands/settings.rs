@@ -6,10 +6,7 @@ use erlc_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]
-pub fn get_settings(
-    state: State<'_, AppContext>,
-    token: String,
-) -> Result<SettingsView, AppError> {
+pub fn get_settings(state: State<'_, AppContext>, token: String) -> Result<SettingsView, AppError> {
     let access = state.authenticate(&token)?;
     settings::read_settings(&state, &access)
 }

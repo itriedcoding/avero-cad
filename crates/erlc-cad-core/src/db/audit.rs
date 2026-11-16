@@ -110,8 +110,14 @@ mod tests {
         })
         .unwrap();
         assert_eq!(db.list_audit_logs(None, None, 10).unwrap().len(), 2);
-        assert_eq!(db.list_audit_logs(Some("command"), None, 10).unwrap().len(), 1);
-        assert_eq!(db.list_audit_logs(None, Some("Troll"), 10).unwrap().len(), 1);
+        assert_eq!(
+            db.list_audit_logs(Some("command"), None, 10).unwrap().len(),
+            1
+        );
+        assert_eq!(
+            db.list_audit_logs(None, Some("Troll"), 10).unwrap().len(),
+            1
+        );
         assert_eq!(db.list_audit_categories().unwrap().len(), 2);
     }
 }

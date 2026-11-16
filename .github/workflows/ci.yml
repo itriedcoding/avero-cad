@@ -17,9 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: crates/erlc-cad-core
+      - name: Formatting
+        run: cargo fmt --all -- --check
+      - name: Lints
+        run: cargo clippy -p erlc-cad-core --all-targets -- -D warnings
       - name: Test core crate
         run: cargo test -p erlc-cad-core --all-targets
 

@@ -104,7 +104,6 @@ export default function BannedPlayersPage() {
             <TableSkeleton rows={8} columns={3} />
           ) : (
             <DataTable<LiveBanView>
-              dense
               columns={[
                 {
                   key: "player",
@@ -170,7 +169,6 @@ export default function BannedPlayersPage() {
             <TableSkeleton rows={6} columns={4} />
           ) : (
             <DataTable<InternalBanView>
-              dense
               columns={[
                 {
                   key: "player",

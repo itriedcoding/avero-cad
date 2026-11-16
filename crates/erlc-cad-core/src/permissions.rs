@@ -250,7 +250,10 @@ impl Access {
 
     pub fn effective_permissions(&self) -> Vec<String> {
         if self.is_owner() {
-            Permission::ALL.iter().map(|p| p.key().to_string()).collect()
+            Permission::ALL
+                .iter()
+                .map(|p| p.key().to_string())
+                .collect()
         } else {
             self.permissions.iter().cloned().collect()
         }
@@ -264,7 +267,10 @@ pub fn resolve_permissions(
     overrides: impl IntoIterator<Item = (String, bool)>,
 ) -> BTreeSet<String> {
     if role_key == ROLE_OWNER {
-        return Permission::ALL.iter().map(|p| p.key().to_string()).collect();
+        return Permission::ALL
+            .iter()
+            .map(|p| p.key().to_string())
+            .collect();
     }
     let mut resolved: BTreeSet<String> = role_grants
         .into_iter()
@@ -291,7 +297,11 @@ mod tests {
     fn every_key_is_unique_and_parses_back() {
         let mut keys = BTreeSet::new();
         for permission in Permission::ALL {
-            assert!(keys.insert(permission.key()), "duplicate key {}", permission.key());
+            assert!(
+                keys.insert(permission.key()),
+                "duplicate key {}",
+                permission.key()
+            );
             assert_eq!(Permission::from_key(permission.key()), Some(*permission));
             assert!(!permission.label().is_empty());
         }
@@ -338,10 +348,7 @@ mod tests {
         let resolved = resolve_permissions(
             ROLE_MODERATOR,
             vec!["players.view".into(), "moderation.kick".into()],
-            vec![
-                ("players.view".into(), false),
-                ("logs.view".into(), true),
-            ],
+            vec![("players.view".into(), false), ("logs.view".into(), true)],
         );
         assert!(!resolved.contains("players.view"));
         assert!(resolved.contains("moderation.kick"));

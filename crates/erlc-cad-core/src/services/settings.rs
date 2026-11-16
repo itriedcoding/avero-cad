@@ -197,7 +197,8 @@ pub fn clear_api_key(ctx: &AppContext, access: &Access) -> AppResult<()> {
     ctx.invalidate_api_client();
     snapshot::clear(ctx);
     let config = ctx.db.api_config()?;
-    ctx.db.update_api_config(&config.base_url, ctx.secrets.storage_kind(), None, None)?;
+    ctx.db
+        .update_api_config(&config.base_url, ctx.secrets.storage_kind(), None, None)?;
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,
@@ -331,9 +332,7 @@ pub fn restore_database(
         return Err(AppError::not_found("That backup file does not exist."));
     }
     // Always keep a safety copy of the current data first.
-    let safety = ctx
-        .db
-        .backup_to(&ctx.paths.data_dir.join("backups"))?;
+    let safety = ctx.db.backup_to(&ctx.paths.data_dir.join("backups"))?;
     ctx.db.restore_from(&source_path)?;
     ctx.invalidate_api_client();
     snapshot::clear(ctx);
