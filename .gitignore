@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Frontend build output
+dist/
+dist-ssr/
+*.local
+
+# Rust / Tauri
+target/
+src-tauri/target/
+crates/*/target/
+src-tauri/gen/schemas/
+
+# Environment and secrets — never commit credentials
+.env
+.env.*
+!.env.example
+*.bin
+secrets/
+
+# Database artifacts produced locally
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs
+*.log
+logs/

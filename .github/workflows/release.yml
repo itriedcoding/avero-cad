@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build Windows installers
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: |
+          cargo test -p erlc-cad-core --all-targets
+          npm run test
+
+      - name: Build and publish installers
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "ER:LC CAD ${{ github.ref_name }}"
+          releaseBody: |
+            Windows x64 installers for ER:LC CAD ${{ github.ref_name }}.
+
+            - `ERLC-CAD_<version>_x64-setup.exe` — NSIS installer (recommended)
+            - `ERLC-CAD_<version>_x64_en-US.msi` — MSI package for managed deployment
+
+            These builds are **unsigned**. Windows SmartScreen will warn on first run; verify the
+            download came from this repository. WebView2 is bootstrapped by the installer when it is
+            not already present.
+
+            Configure your ER:LC server key under **API Configuration** after installing.
+          releaseDraft: false
+          prerelease: false
+          args: --bundles nsis,msi
