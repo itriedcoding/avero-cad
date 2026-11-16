@@ -1,9 +1,13 @@
 name: Release
 
+# Publishing is version driven: a push to main (or a v* tag) builds the
+# installers for the version in package.json and attaches them to the matching
+# GitHub Release. If that release already exists, the build is skipped.
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,38 +24,69 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check for an existing release
+        id: existing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh api "repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Release already published
+        if: steps.existing.outputs.published == 'true'
+        shell: bash
+        run: echo "${{ steps.version.outputs.tag }} is already published; nothing to build."
+
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.existing.outputs.published == 'false'
 
       - uses: Swatinem/rust-cache@v2
+        if: steps.existing.outputs.published == 'false'
         with:
           workspaces: src-tauri
 
       - name: Install dependencies
+        if: steps.existing.outputs.published == 'false'
         run: npm ci
 
       - name: Unit tests
+        if: steps.existing.outputs.published == 'false'
+        shell: bash
         run: |
           cargo test -p erlc-cad-core --all-targets
           npm run test
 
       - name: Build and publish installers
+        if: steps.existing.outputs.published == 'false'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "ER:LC CAD ${{ github.ref_name }}"
+          tagName: ${{ steps.version.outputs.tag }}
+          releaseName: "ER:LC CAD ${{ steps.version.outputs.tag }}"
           releaseBody: |
-            Windows x64 installers for ER:LC CAD ${{ github.ref_name }}.
+            Windows x64 installers for ER:LC CAD ${{ steps.version.outputs.version }}.
 
-            - `ERLC-CAD_<version>_x64-setup.exe` — NSIS installer (recommended)
-            - `ERLC-CAD_<version>_x64_en-US.msi` — MSI package for managed deployment
+            - `ERLC-CAD_${{ steps.version.outputs.version }}_x64-setup.exe` — NSIS installer (recommended)
+            - `ERLC-CAD_${{ steps.version.outputs.version }}_x64_en-US.msi` — MSI package for managed deployment
 
             These builds are **unsigned**. Windows SmartScreen will warn on first run; verify the
             download came from this repository. WebView2 is bootstrapped by the installer when it is
             not already present.
 
-            Configure your ER:LC server key under **API Configuration** after installing.
+            After installing, configure your ER:LC server key under **API Configuration**.
           releaseDraft: false
           prerelease: false
           args: --bundles nsis,msi
