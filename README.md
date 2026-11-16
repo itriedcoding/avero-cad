@@ -266,18 +266,31 @@ release workflow, which uploads the installers it produces.
 
 ## Releases
 
-`.github/workflows/release.yml` builds on `windows-latest` when a `v*` tag is pushed, runs the tests,
-invokes `tauri build` for NSIS and MSI, and attaches both installers to a GitHub Release:
+Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
 
-```
-ERLC-CAD_<version>_x64-setup.exe
-ERLC-CAD_<version>_x64_en-US.msi
-```
+- `ERLC-CAD_1.0.0_x64-setup.exe` — NSIS installer (recommended)
+- `ERLC-CAD_1.0.0_x64_en-US.msi` — MSI package for managed deployment
 
-To cut a release:
+`.github/workflows/release.yml` builds on `windows-latest`, runs the Rust and frontend tests,
+invokes `tauri build` for NSIS and MSI, and attaches both installers to a GitHub Release named after
+the version in `package.json`. The workflow runs on every push to `main` and skips the build when a
+release for that version already exists, so a normal change is a no-op while a version bump publishes
+once. Pushing a `v*` tag publishes the same way.
+
+To cut a release, bump the version and push:
 
 ```bash
-# bump "version" in package.json and src-tauri/tauri.conf.json, then
+# keep these in sync
+#   package.json "version"
+#   src-tauri/tauri.conf.json "version"
+#   Cargo.toml [workspace.package] version
+git commit -am "Release v1.0.0"
+git push origin main
+```
+
+A tag is also accepted if you prefer driving releases from tags:
+
+```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
