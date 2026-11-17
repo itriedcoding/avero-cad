@@ -1,8 +1,8 @@
-//! ER:LC CAD desktop shell.
+//! Avero CAD desktop shell.
 
 pub mod commands;
 
-use erlc_cad_core::services::{settings, AppContext};
+use avero_cad_core::services::{settings, AppContext};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -23,7 +23,7 @@ pub fn run() {
             })?;
             ctx.log(
                 "info",
-                &format!("ER:LC CAD starting (data dir: {})", data_dir.display()),
+                &format!("Avero CAD starting (data dir: {})", data_dir.display()),
             );
             if let Err(err) = settings::auto_backup_if_due(&ctx) {
                 ctx.log(
@@ -93,6 +93,17 @@ pub fn run() {
             commands::dispatch::assign_unit_to_call,
             commands::dispatch::unassign_unit,
             commands::dispatch::delete_unit,
+            // BOLO board, duty roster and statistics
+            commands::operations::list_bolos,
+            commands::operations::create_bolo,
+            commands::operations::clear_bolo,
+            commands::operations::reopen_bolo,
+            commands::operations::duty_status,
+            commands::operations::clock_in,
+            commands::operations::clock_out,
+            commands::operations::list_shifts,
+            commands::operations::end_shift,
+            commands::operations::stats_overview,
             // Command console
             commands::console::execute_server_command,
             commands::console::list_command_history,
@@ -125,5 +136,5 @@ pub fn run() {
             commands::settings::database_stats
         ])
         .run(tauri::generate_context!())
-        .expect("error while running ER:LC CAD");
+        .expect("error while running Avero CAD");
 }

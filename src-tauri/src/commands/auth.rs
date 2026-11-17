@@ -1,6 +1,6 @@
-use erlc_cad_core::models::{BootstrapView, SessionView};
-use erlc_cad_core::services::{auth, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::models::{BootstrapView, SessionView};
+use avero_cad_core::services::{auth, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

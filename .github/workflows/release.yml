@@ -65,7 +65,7 @@ jobs:
         if: steps.existing.outputs.published == 'false'
         shell: bash
         run: |
-          cargo test -p erlc-cad-core --all-targets
+          cargo test -p avero-cad-core --all-targets
           npm run test
 
       - name: Build and publish installers
@@ -75,12 +75,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ steps.version.outputs.tag }}
-          releaseName: "ER:LC CAD ${{ steps.version.outputs.tag }}"
+          releaseName: "Avero CAD ${{ steps.version.outputs.tag }}"
           releaseBody: |
-            Windows x64 installers for ER:LC CAD ${{ steps.version.outputs.version }}.
+            Windows x64 installers for Avero CAD ${{ steps.version.outputs.version }}.
 
-            - `ERLC-CAD_${{ steps.version.outputs.version }}_x64-setup.exe` — NSIS installer (recommended)
-            - `ERLC-CAD_${{ steps.version.outputs.version }}_x64_en-US.msi` — MSI package for managed deployment
+            - `Avero CAD_${{ steps.version.outputs.version }}_x64-setup.exe` — NSIS installer (recommended)
+            - `Avero CAD_${{ steps.version.outputs.version }}_x64_en-US.msi` — MSI package for managed deployment
 
             These builds are **unsigned**. Windows SmartScreen will warn on first run; verify the
             download came from this repository. WebView2 is bootstrapped by the installer when it is

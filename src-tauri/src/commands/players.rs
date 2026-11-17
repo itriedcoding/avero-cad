@@ -1,9 +1,9 @@
-use erlc_cad_core::models::{
+use avero_cad_core::models::{
     AvatarView, PlayerProfile, RobloxUserView, SearchResult, Snapshot, StaffNoteView,
 };
-use erlc_cad_core::permissions::{Access, Permission};
-use erlc_cad_core::services::{players, snapshot, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::permissions::{Access, Permission};
+use avero_cad_core::services::{players, snapshot, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

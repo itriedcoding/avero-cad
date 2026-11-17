@@ -1,7 +1,7 @@
 //! Server key storage.
 //!
 //! * Windows: encrypted with DPAPI (`CryptProtectData`) using an application
-//!   entropy value, then written to `%APPDATA%\com.erlccad.desktop\secrets`.
+//!   entropy value, then written to `%APPDATA%\com.averocad.desktop\secrets`.
 //! * Other platforms (development and automated tests only): a clearly labelled
 //!   fallback file with owner-only permissions. The UI surfaces this state so it
 //!   is never mistaken for DPAPI protection.
@@ -157,7 +157,7 @@ mod platform {
     };
 
     /// Binds the ciphertext to this application (DPAPI optional entropy).
-    const ENTROPY: &[u8] = b"erlc-cad/server-key/v1";
+    const ENTROPY: &[u8] = b"avero-cad/server-key/v1";
 
     fn blob(data: &[u8]) -> CRYPT_INTEGER_BLOB {
         CRYPT_INTEGER_BLOB {

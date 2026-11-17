@@ -10,7 +10,7 @@ import {
 import { api, errorMessage } from "@/lib/api";
 import type { BootstrapView, SessionView } from "@/types";
 
-const TOKEN_KEY = "erlc-cad.session-token";
+const TOKEN_KEY = "avero-cad.session-token";
 
 interface SessionContextValue {
   bootstrap: BootstrapView | null;

@@ -97,7 +97,7 @@ impl ApiClient {
             .timeout(REQUEST_TIMEOUT)
             .connect_timeout(Duration::from_secs(10))
             .user_agent(format!(
-                "erlccad/{} (Windows desktop CAD)",
+                "averocad/{} (Windows desktop CAD)",
                 env!("CARGO_PKG_VERSION")
             ))
             .build()

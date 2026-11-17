@@ -1,4 +1,4 @@
-//! Core library for the ER:LC CAD desktop application.
+//! Core library for the Avero CAD desktop application.
 //!
 //! Everything that touches the ER:LC API, the SQLite database, credentials or
 //! permissions lives here so it can be compiled and tested independently of the

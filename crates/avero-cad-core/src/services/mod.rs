@@ -1,13 +1,16 @@
 //! Application services and shared runtime context.
 
 pub mod auth;
+pub mod bolos;
 pub mod command;
 pub mod dispatch;
 pub mod moderation;
 pub mod players;
 pub mod settings;
+pub mod shifts;
 pub mod snapshot;
 pub mod staff;
+pub mod stats;
 
 use crate::api::ApiClient;
 use crate::db::Database;
@@ -35,8 +38,8 @@ impl AppPaths {
     pub fn new(data_dir: impl AsRef<Path>) -> Self {
         let data_dir = data_dir.as_ref().to_path_buf();
         Self {
-            db_path: data_dir.join("erlc-cad.sqlite"),
-            log_path: data_dir.join("logs").join("erlc-cad.log"),
+            db_path: data_dir.join("avero-cad.sqlite"),
+            log_path: data_dir.join("logs").join("avero-cad.log"),
             avatar_cache_dir: data_dir.join("avatar-cache"),
             data_dir,
         }

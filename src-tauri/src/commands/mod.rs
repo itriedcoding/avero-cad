@@ -8,6 +8,7 @@ pub mod auth;
 pub mod console;
 pub mod dispatch;
 pub mod moderation;
+pub mod operations;
 pub mod players;
 pub mod settings;
 pub mod staff;

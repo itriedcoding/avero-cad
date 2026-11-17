@@ -333,7 +333,7 @@ export default function SettingsPage() {
               <div className="min-w-0 flex-1">
                 <Input
                   label="Backup folder (absolute path)"
-                  placeholder="C:\\ERLC-CAD\\backups"
+                  placeholder="C:\\Avero CAD\\backups"
                   value={draft.backupDirectory}
                   onChange={(event) => patch({ backupDirectory: event.target.value })}
                   spellCheck={false}
@@ -393,7 +393,7 @@ export default function SettingsPage() {
               <div className="min-w-0 flex-1">
                 <Input
                   label="Backup file to restore"
-                  placeholder="C:\\ERLC-CAD\\backups\\erlc-cad-…db"
+                  placeholder="C:\\Avero CAD\\backups\\avero-cad-…db"
                   value={restorePath}
                   onChange={(event) => setRestorePath(event.target.value)}
                   spellCheck={false}

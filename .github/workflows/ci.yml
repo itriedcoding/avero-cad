@@ -21,13 +21,13 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: crates/erlc-cad-core
+          workspaces: crates/avero-cad-core
       - name: Formatting
         run: cargo fmt --all -- --check
       - name: Lints
-        run: cargo clippy -p erlc-cad-core --all-targets -- -D warnings
+        run: cargo clippy -p avero-cad-core --all-targets -- -D warnings
       - name: Test core crate
-        run: cargo test -p erlc-cad-core --all-targets
+        run: cargo test -p avero-cad-core --all-targets
 
   frontend:
     name: Frontend build and tests
@@ -57,4 +57,4 @@ jobs:
       - name: Build frontend assets
         run: npm run build
       - name: Check the Tauri shell and Windows-only code
-        run: cargo check -p erlc-cad --all-targets
+        run: cargo check -p avero-cad --all-targets

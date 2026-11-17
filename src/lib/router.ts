@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 export const ROUTES = [
   "dashboard",
   "dispatch",
+  "bolos",
+  "roster",
+  "stats",
   "map",
   "players",
   "database",
@@ -23,6 +26,9 @@ export type RouteKey = (typeof ROUTES)[number];
 export const ROUTE_TITLES: Record<RouteKey, string> = {
   dashboard: "Dashboard",
   dispatch: "CAD Dispatch",
+  bolos: "BOLO Board",
+  roster: "Duty Roster",
+  stats: "Statistics",
   map: "Live Map",
   players: "Players",
   database: "Player Database",

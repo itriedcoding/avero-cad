@@ -756,6 +756,115 @@ pub struct LiveBanView {
     pub raw: String,
 }
 
+// ---------------------------------------------------------------------------
+// Operations: BOLO board, duty roster and statistics
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoloView {
+    pub id: i64,
+    /// "person" | "vehicle"
+    pub kind: String,
+    pub subject_name: String,
+    pub plate: String,
+    pub description: String,
+    pub last_seen: String,
+    pub priority: String,
+    /// "active" | "cleared"
+    pub status: String,
+    pub created_by_name: String,
+    pub created_at: i64,
+    pub cleared_by_name: Option<String>,
+    pub cleared_at: Option<i64>,
+    pub clearance_note: Option<String>,
+    /// Where the subject was last matched in the live snapshot, if anywhere.
+    pub live_match: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DutyShiftView {
+    pub id: i64,
+    pub user_id: i64,
+    pub display_name: String,
+    pub started_at: i64,
+    pub ended_at: Option<i64>,
+    pub duration_ms: i64,
+    pub on_duty: bool,
+    pub end_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DutyStatusView {
+    pub current: Option<DutyShiftView>,
+    pub today_ms: i64,
+    pub week_ms: i64,
+    pub total_ms: i64,
+    pub shift_count: i64,
+    pub roster: Vec<DutyShiftView>,
+    pub recent: Vec<DutyShiftView>,
+    pub can_view_roster: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DailyStatView {
+    pub date: String,
+    pub calls_opened: i64,
+    pub calls_closed: i64,
+    pub moderation: i64,
+    pub commands: i64,
+    pub peak_players: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HourStatView {
+    pub hour: i64,
+    pub calls: i64,
+    pub moderation: i64,
+    pub commands: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TopModeratorView {
+    pub name: String,
+    pub actions: i64,
+    pub failed: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StatsOverviewView {
+    pub range_days: i64,
+    pub since: i64,
+    pub calls_opened: i64,
+    pub calls_closed: i64,
+    pub calls_open_now: i64,
+    pub avg_close_ms: Option<i64>,
+    pub moderation_total: i64,
+    pub moderation_failed: i64,
+    pub kicks: i64,
+    pub bans: i64,
+    pub unbans: i64,
+    pub internal_bans: i64,
+    pub commands_total: i64,
+    pub commands_failed: i64,
+    pub bolos_active: i64,
+    pub bolos_cleared: i64,
+    pub players_tracked: i64,
+    pub players_new: i64,
+    pub duty_ms: i64,
+    pub duty_shifts: i64,
+    pub on_duty_now: i64,
+    pub daily: Vec<DailyStatView>,
+    pub hours: Vec<HourStatView>,
+    pub top_moderators: Vec<TopModeratorView>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

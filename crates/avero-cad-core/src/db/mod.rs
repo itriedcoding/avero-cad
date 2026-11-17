@@ -2,6 +2,7 @@
 
 pub mod audit;
 pub mod backup;
+pub mod bolos;
 pub mod commands;
 pub mod dispatch;
 pub mod metrics;
@@ -9,6 +10,8 @@ pub mod migrations;
 pub mod moderation;
 pub mod players;
 pub mod settings;
+pub mod shifts;
+pub mod stats;
 pub mod users;
 
 use crate::error::{AppError, AppResult};
@@ -110,7 +113,7 @@ mod tests {
         let permissions: i64 = conn
             .query_row("SELECT COUNT(*) FROM permissions", [], |row| row.get(0))
             .unwrap();
-        assert!(permissions >= 30);
+        assert!(permissions >= 35);
         let owner_perms: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM role_permissions rp JOIN roles r ON r.id = rp.role_id WHERE r.key = 'owner'",
@@ -130,7 +133,12 @@ mod tests {
         let version: i64 = conn
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(version, 1);
+        let highest = migrations::MIGRATIONS
+            .iter()
+            .map(|migration| migration.version)
+            .max()
+            .unwrap_or(0);
+        assert_eq!(version, highest);
     }
 
     #[test]

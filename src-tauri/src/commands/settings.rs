@@ -1,8 +1,8 @@
-use erlc_cad_core::models::{
+use avero_cad_core::models::{
     ApiConfigView, BackupView, ConnectionTestView, DatabaseStatsView, SettingsUpdate, SettingsView,
 };
-use erlc_cad_core::services::{settings, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::services::{settings, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

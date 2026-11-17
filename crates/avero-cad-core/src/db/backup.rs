@@ -29,7 +29,7 @@ impl Database {
     pub fn backup_to(&self, directory: &Path) -> AppResult<BackupView> {
         std::fs::create_dir_all(directory)?;
         let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
-        let path = unique_path(directory, &format!("erlc-cad-backup-{stamp}.sqlite"));
+        let path = unique_path(directory, &format!("avero-cad-backup-{stamp}.sqlite"));
         let conn = self.lock()?;
         let escaped = path.to_string_lossy().replace('\'', "''");
         conn.execute(&format!("VACUUM INTO '{escaped}'"), [])?;
@@ -78,7 +78,7 @@ impl Database {
             )?;
             if exists == 0 {
                 return Err(AppError::validation(format!(
-                    "That backup is missing the \"{table}\" table and is not an ER:LC CAD database."
+                    "That backup is missing the \"{table}\" table and is not an Avero CAD database."
                 )));
             }
         }

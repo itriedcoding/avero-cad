@@ -11,13 +11,22 @@ pub struct Migration {
     pub sql: &'static str,
 }
 
-pub const MIGRATIONS: &[Migration] = &[Migration {
-    version: 1,
-    sql: include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../migrations/0001_initial.sql"
-    )),
-}];
+pub const MIGRATIONS: &[Migration] = &[
+    Migration {
+        version: 1,
+        sql: include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../migrations/0001_initial.sql"
+        )),
+    },
+    Migration {
+        version: 2,
+        sql: include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../migrations/0002_operations.sql"
+        )),
+    },
+];
 
 pub fn apply(conn: &Connection) -> AppResult<()> {
     let current: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;

@@ -1,6 +1,6 @@
-use erlc_cad_core::models::{CommandHistoryView, CommandPolicyView, CommandResultView};
-use erlc_cad_core::services::{command, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::models::{CommandHistoryView, CommandPolicyView, CommandResultView};
+use avero_cad_core::services::{command, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

@@ -1,4 +1,4 @@
-# ER:LC CAD
+# Avero CAD
 
 A Windows desktop **CAD (Computer-Aided Dispatch) and server management application** for
 [Emergency Response: Liberty County](https://policeroleplay.community/) private servers, built with
@@ -41,6 +41,17 @@ destructive actions and errors.
 - **CAD Dispatch** — create, edit, assign, progress and close incidents; attach players and units;
   priority levels; full call history. Unit roster with callsigns, teams and configurable statuses
   (available, on duty, en route, on scene, transporting, unavailable, off duty).
+- **BOLO Board** — be-on-the-lookout reports for people and vehicles with priority, last-seen detail
+  and a mandatory resolution note. Active reports are matched against the latest live snapshot by
+  exact username or normalised plate; a match is only shown when the API actually reported the
+  subject. Every create, clear and reopen is audited.
+- **Duty Roster** — staff clock themselves in and out. The roster shows who is on duty with a
+  running clock, totals for today, this week and all time come from stored shift timestamps, and a
+  supervisor with `shifts.manage` can close a forgotten shift with a recorded reason.
+- **Statistics** — calls opened and closed, average call duration, moderation outcomes, command
+  successes and failures, duty hours, BOLOs, tracked players and peak player counts aggregated from
+  this installation's own database, with a daily chart, hour-of-day histogram and the most active
+  moderators.
 - **Live Map** — official 5355 × 5355 ER:LC map imagery, live player positions and emergency-call
   coordinates from API v2, zoom and pan, marker selection, postal/street/building details.
 - **Players** — live roster with avatars, team, callsign, permission level and location.
@@ -74,15 +85,16 @@ destructive actions and errors.
 
 ```
 Cargo workspace
-├── crates/erlc-cad-core/     all business logic; compiles and is tested on any OS
+├── crates/avero-cad-core/     all business logic; compiles and is tested on any OS
 │   ├── api/                  ER:LC HTTP client, rate limiting, error mapping
 │   ├── db/                   SQLite schema access, migrations, queries, backup
 │   ├── security/             DPAPI storage (Windows) + Argon2id passwords
-│   ├── services/             auth, snapshot, command, moderation, players, dispatch, staff, settings
+│   ├── services/             auth, snapshot, command, moderation, players, dispatch, staff,
+│   │                         settings, bolos, shifts, stats
 │   ├── permissions.rs        permission catalogue and access checks
 │   ├── roblox.rs             Roblox user + thumbnail lookups, disk/memory cache
 │   └── models.rs             serialisable view models shared with the frontend
-└── src-tauri/                thin Tauri shell: window, state, 63 IPC commands
+└── src-tauri/                thin Tauri shell: window, state, 73 IPC commands
     ├── src/lib.rs            app setup, auto-backup loop, command registry
     ├── src/commands/         one module per domain, argument marshalling only
     ├── tauri.conf.json       window, CSP, NSIS + MSI bundle configuration
@@ -133,7 +145,7 @@ The Tauri dev server expects Vite on `http://localhost:1420`, which `npm run dev
 Backend-only development and tests do not need a desktop toolchain:
 
 ```bash
-cargo test -p erlc-cad-core
+cargo test -p avero-cad-core
 ```
 
 ## Building a Windows installer
@@ -149,8 +161,8 @@ npm run tauri build -- --bundles nsis,msi
 Outputs:
 
 ```
-src-tauri/target/release/bundle/nsis/ERLC-CAD_<version>_x64-setup.exe
-src-tauri/target/release/bundle/msi/ERLC-CAD_<version>_x64_en-US.msi
+src-tauri/target/release/bundle/nsis/Avero CAD_<version>_x64-setup.exe
+src-tauri/target/release/bundle/msi/Avero CAD_<version>_x64_en-US.msi
 ```
 
 The same build runs automatically in GitHub Actions on a version tag (see [Releases](#releases)).
@@ -195,6 +207,8 @@ Per-account overrides can grant or deny a single key without changing the role.
 | Area       | Keys                                                                                  |
 | ---------- | ------------------------------------------------------------------------------------- |
 | Live data  | `dashboard.view`, `map.view`, `players.view`, `vehicles.view`, `emergency.view`, `logs.view` |
+| Operations | `bolos.view`, `bolos.manage`, `stats.view`                                          |
+| Duty       | `shifts.view`, `shifts.manage`                                                        |
 | Dispatch   | `dispatch.view`, `dispatch.create`, `dispatch.update`, `dispatch.close`, `dispatch.units` |
 | Moderation | `moderation.view`, `moderation.kick`, `moderation.ban`, `moderation.unban`, `moderation.internal` |
 | Players    | `players.notes.view`, `players.notes.manage`                                            |
@@ -250,8 +264,8 @@ These are properties of the ER:LC API, not of this application. Nothing is simul
 ## Testing
 
 ```bash
-cargo test -p erlc-cad-core     # 82 unit tests: API, permissions, DB, services, security
-npm run test                    # 17 frontend unit tests (formatting, status mapping)
+cargo test -p avero-cad-core     # 106 unit tests: API, permissions, DB, services, security
+npm run test                    # 20 frontend unit tests (formatting, status mapping, shift spans)
 npm run build                   # TypeScript typecheck + production bundle
 ```
 
@@ -268,8 +282,13 @@ release workflow, which uploads the installers it produces.
 
 Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
 
-- `ERLC-CAD_1.0.0_x64-setup.exe` — NSIS installer (recommended)
-- `ERLC-CAD_1.0.0_x64_en-US.msi` — MSI package for managed deployment
+- `Avero CAD_1.1.0_x64-setup.exe` — NSIS installer (recommended)
+- `Avero CAD_1.1.0_x64_en-US.msi` — MSI package for managed deployment
+
+**1.1.0** introduces the Avero CAD name (`Avero CAD.exe`, publisher and install folder) together
+with the BOLO board, the duty roster and the statistics module. The application identifier changed to
+`com.averocad.desktop`, so 1.1.0 uses a fresh data directory: a 1.0.0 installation's database is not
+picked up automatically. Export anything you need from 1.0.0 before switching.
 
 `.github/workflows/release.yml` builds on `windows-latest`, runs the Rust and frontend tests,
 invokes `tauri build` for NSIS and MSI, and attaches both installers to a GitHub Release named after
@@ -284,15 +303,15 @@ To cut a release, bump the version and push:
 #   package.json "version"
 #   src-tauri/tauri.conf.json "version"
 #   Cargo.toml [workspace.package] version
-git commit -am "Release v1.0.0"
+git commit -am "Release v1.1.0"
 git push origin main
 ```
 
 A tag is also accepted if you prefer driving releases from tags:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 Builds are **unsigned** unless you configure code-signing secrets. Windows SmartScreen will warn

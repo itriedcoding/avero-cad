@@ -1,6 +1,6 @@
 # Security Policy
 
-ER:LC CAD can execute real commands against a live ER:LC private server, so security issues are taken
+Avero CAD can execute real commands against a live ER:LC private server, so security issues are taken
 seriously.
 
 ## Reporting a vulnerability

@@ -1,13 +1,13 @@
 [package]
-name = "erlc-cad-core"
+name = "avero-cad-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Core API, database, security and CAD services for the ER:LC CAD desktop application"
+description = "Core API, database, security and CAD services for the Avero CAD desktop application"
 
 [lib]
-name = "erlc_cad_core"
+name = "avero_cad_core"
 path = "src/lib.rs"
 
 [dependencies]

@@ -42,10 +42,10 @@ export default function AuthPage() {
       <div className="hidden w-[46%] flex-col justify-between border-r border-line bg-surface p-8 lg:flex">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold text-ink">
-            ER
+            AC
           </div>
           <div>
-            <p className="text-[13px] font-semibold tracking-tight text-ink">ER:LC CAD</p>
+            <p className="text-[13px] font-semibold tracking-tight text-ink">Avero CAD</p>
             <p className="text-[10px] uppercase tracking-[0.14em] text-faint">Windows desktop console</p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function AuthPage() {
         <div className="w-full max-w-sm">
           <div className="mb-6 lg:hidden">
             <div className="flex h-8 w-8 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold text-ink">
-              ER
+              AC
             </div>
           </div>
           <h2 className="text-lg font-semibold tracking-tight text-ink">

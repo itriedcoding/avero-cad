@@ -1,4 +1,4 @@
-// Types mirror the Rust view models in crates/erlc-cad-core/src/models.rs.
+// Types mirror the Rust view models in crates/avero-cad-core/src/models.rs.
 
 
 export interface ApiError {
@@ -458,4 +458,97 @@ export interface LiveBanView {
   username: string | null;
   robloxUserId: number | null;
   raw: string;
+}
+
+export type BoloKind = 'person' | 'vehicle';
+export type BoloStatus = 'active' | 'cleared';
+export type BoloPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface BoloView {
+  id: number;
+  kind: BoloKind;
+  subjectName: string;
+  plate: string;
+  description: string;
+  lastSeen: string;
+  priority: BoloPriority;
+  status: BoloStatus;
+  createdByName: string;
+  createdAt: number;
+  clearedByName: string | null;
+  clearedAt: number | null;
+  clearanceNote: string | null;
+  /** Where the subject was last matched in the live snapshot, if anywhere. */
+  liveMatch: string | null;
+}
+
+export interface DutyShiftView {
+  id: number;
+  userId: number;
+  displayName: string;
+  startedAt: number;
+  endedAt: number | null;
+  durationMs: number;
+  onDuty: boolean;
+  endReason: string | null;
+}
+
+export interface DutyStatusView {
+  current: DutyShiftView | null;
+  todayMs: number;
+  weekMs: number;
+  totalMs: number;
+  shiftCount: number;
+  roster: DutyShiftView[];
+  recent: DutyShiftView[];
+  canViewRoster: boolean;
+}
+
+export interface DailyStatView {
+  date: string;
+  callsOpened: number;
+  callsClosed: number;
+  moderation: number;
+  commands: number;
+  peakPlayers: number;
+}
+
+export interface HourStatView {
+  hour: number;
+  calls: number;
+  moderation: number;
+  commands: number;
+}
+
+export interface TopModeratorView {
+  name: string;
+  actions: number;
+  failed: number;
+}
+
+export interface StatsOverviewView {
+  rangeDays: number;
+  since: number;
+  callsOpened: number;
+  callsClosed: number;
+  callsOpenNow: number;
+  avgCloseMs: number | null;
+  moderationTotal: number;
+  moderationFailed: number;
+  kicks: number;
+  bans: number;
+  unbans: number;
+  internalBans: number;
+  commandsTotal: number;
+  commandsFailed: number;
+  bolosActive: number;
+  bolosCleared: number;
+  playersTracked: number;
+  playersNew: number;
+  dutyMs: number;
+  dutyShifts: number;
+  onDutyNow: number;
+  daily: DailyStatView[];
+  hours: HourStatView[];
+  topModerators: TopModeratorView[];
 }

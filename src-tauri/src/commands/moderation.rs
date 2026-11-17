@@ -1,8 +1,8 @@
-use erlc_cad_core::models::{
+use avero_cad_core::models::{
     CommandResultView, InternalBanView, LiveBanView, ModerationRecordView,
 };
-use erlc_cad_core::services::{moderation, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::services::{moderation, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

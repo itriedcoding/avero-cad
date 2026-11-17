@@ -24,7 +24,7 @@ pub fn unique_temp_dir(prefix: &str) -> std::path::PathBuf {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let sequence = COUNTER.fetch_add(1, Ordering::Relaxed);
     let path = std::env::temp_dir().join(format!(
-        "erlc-cad-{prefix}-{}-{sequence}",
+        "avero-cad-{prefix}-{}-{sequence}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&path);

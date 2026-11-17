@@ -94,7 +94,7 @@ impl RobloxClient {
             .timeout(Duration::from_secs(15))
             .connect_timeout(Duration::from_secs(8))
             .user_agent(format!(
-                "erlccad/{} (Windows desktop CAD)",
+                "averocad/{} (Windows desktop CAD)",
                 env!("CARGO_PKG_VERSION")
             ))
             .build()

@@ -1,6 +1,6 @@
-use erlc_cad_core::models::{CallView, UnitView};
-use erlc_cad_core::services::{dispatch, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::models::{CallView, UnitView};
+use avero_cad_core::services::{dispatch, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

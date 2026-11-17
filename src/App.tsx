@@ -12,7 +12,7 @@ function Root() {
       <div className="flex h-full items-center justify-center bg-canvas">
         <div className="flex flex-col items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-md border border-line-strong bg-surface-2 text-[12px] font-bold text-ink">
-            ER
+            AC
           </div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-faint">Starting console</p>
         </div>

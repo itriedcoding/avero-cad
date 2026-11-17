@@ -1,7 +1,7 @@
-use erlc_cad_core::models::{AuditLogView, RoleView, StaffUserView};
-use erlc_cad_core::permissions::PermissionInfo;
-use erlc_cad_core::services::{staff, AppContext};
-use erlc_cad_core::AppError;
+use avero_cad_core::models::{AuditLogView, RoleView, StaffUserView};
+use avero_cad_core::permissions::PermissionInfo;
+use avero_cad_core::services::{staff, AppContext};
+use avero_cad_core::AppError;
 use tauri::State;
 
 #[tauri::command]

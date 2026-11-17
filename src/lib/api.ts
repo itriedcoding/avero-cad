@@ -5,6 +5,7 @@ import type {
   AuditLogView,
   AvatarView,
   BackupView,
+  BoloView,
   BootstrapView,
   CallView,
   CommandHistoryView,
@@ -12,6 +13,8 @@ import type {
   CommandResultView,
   ConnectionTestView,
   DatabaseStatsView,
+  DutyShiftView,
+  DutyStatusView,
   InternalBanView,
   LiveBanView,
   ModerationRecordView,
@@ -26,6 +29,7 @@ import type {
   Snapshot,
   StaffNoteView,
   StaffUserView,
+  StatsOverviewView,
   UnitView,
 } from "@/types";
 
@@ -127,6 +131,35 @@ export const api = {
   listLiveBans: (token: string) => call<LiveBanView[]>("list_live_bans", { token }),
   listInternalBans: (token: string, activeOnly = false, limit = 200) =>
     call<InternalBanView[]>("list_internal_bans", { token, activeOnly, limit }),
+
+  listBolos: (token: string, status: string | null) =>
+    call<BoloView[]>("list_bolos", { token, status }),
+  createBolo: (
+    token: string,
+    payload: {
+      kind: string;
+      subjectName: string;
+      plate: string;
+      description: string;
+      lastSeen: string;
+      priority: string;
+    },
+  ) => call<BoloView>("create_bolo", { token, ...payload }),
+  clearBolo: (token: string, boloId: number, note: string) =>
+    call<BoloView>("clear_bolo", { token, boloId, note }),
+  reopenBolo: (token: string, boloId: number) =>
+    call<BoloView>("reopen_bolo", { token, boloId }),
+
+  dutyStatus: (token: string) => call<DutyStatusView>("duty_status", { token }),
+  clockIn: (token: string) => call<DutyStatusView>("clock_in", { token }),
+  clockOut: (token: string) => call<DutyStatusView>("clock_out", { token }),
+  listShifts: (token: string, mineOnly = false) =>
+    call<DutyShiftView[]>("list_shifts", { token, mineOnly }),
+  endShift: (token: string, userId: number, reason: string) =>
+    call<DutyShiftView>("end_shift", { token, userId, reason }),
+
+  statsOverview: (token: string, days: number) =>
+    call<StatsOverviewView>("stats_overview", { token, days }),
 
   listCalls: (token: string, status: string | null, limit = 100) =>
     call<CallView[]>("list_calls", { token, status, limit }),

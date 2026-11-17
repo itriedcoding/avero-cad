@@ -2,17 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import {
   Ban,
   Car,
+  ChartColumn,
   ChevronsLeft,
   ChevronsRight,
   Database,
   History,
   KeyRound,
   LayoutDashboard,
+  Clock,
   LogOut,
   Map,
   Radio,
   RefreshCw,
   ScrollText,
+  ScanEye,
   Settings,
   ShieldAlert,
   Siren,
@@ -33,6 +36,9 @@ import { NoAccess } from "@/components/PermissionGate";
 import AuthPage from "@/pages/Auth";
 import DashboardPage from "@/pages/Dashboard";
 import DispatchPage from "@/pages/Dispatch";
+import BolosPage from "@/pages/Bolos";
+import DutyRosterPage from "@/pages/DutyRoster";
+import StatisticsPage from "@/pages/Statistics";
 import LiveMapPage from "@/pages/LiveMap";
 import PlayersPage from "@/pages/Players";
 import PlayerDatabasePage from "@/pages/PlayerDatabase";
@@ -60,11 +66,14 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard.view" },
       { key: "dispatch", label: "CAD Dispatch", icon: Radio, permission: "dispatch.view" },
+      { key: "bolos", label: "BOLO Board", icon: ScanEye, permission: "bolos.view" },
       { key: "map", label: "Live Map", icon: Map, permission: "map.view" },
       { key: "players", label: "Players", icon: Users, permission: "players.view" },
       { key: "database", label: "Player Database", icon: Database, permission: "players.view" },
       { key: "moderation", label: "Moderation", icon: ShieldAlert, permission: "moderation.view" },
       { key: "bans", label: "Banned Players", icon: Ban, permission: "moderation.view" },
+      { key: "roster", label: "Duty Roster", icon: Clock, permission: "shifts.view" },
+      { key: "stats", label: "Statistics", icon: ChartColumn, permission: "stats.view" },
     ],
   },
   {
@@ -90,6 +99,9 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
 const PAGE_PERMISSIONS: Record<RouteKey, string> = {
   dashboard: "dashboard.view",
   dispatch: "dispatch.view",
+  bolos: "bolos.view",
+  roster: "shifts.view",
+  stats: "stats.view",
   map: "map.view",
   players: "players.view",
   database: "players.view",
@@ -111,6 +123,12 @@ function renderPage(route: RouteKey) {
       return <DashboardPage />;
     case "dispatch":
       return <DispatchPage />;
+    case "bolos":
+      return <BolosPage />;
+    case "roster":
+      return <DutyRosterPage />;
+    case "stats":
+      return <StatisticsPage />;
     case "map":
       return <LiveMapPage />;
     case "players":
@@ -155,7 +173,7 @@ export default function AppShell() {
   const startupApplied = useRef(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return window.localStorage.getItem("erlc-cad.sidebar") === "collapsed";
+      return window.localStorage.getItem("avero-cad.sidebar") === "collapsed";
     } catch {
       return false;
     }
@@ -165,7 +183,7 @@ export default function AppShell() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem("erlc-cad.sidebar", collapsed ? "collapsed" : "expanded");
+      window.localStorage.setItem("avero-cad.sidebar", collapsed ? "collapsed" : "expanded");
     } catch {
       /* ignore storage failures */
     }
@@ -217,11 +235,11 @@ export default function AppShell() {
           )}
         >
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold tracking-tight text-ink">
-            ER
+            AC
           </div>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold tracking-tight text-ink">ER:LC CAD</p>
+              <p className="truncate text-[13px] font-semibold tracking-tight text-ink">Avero CAD</p>
               <p className="truncate text-[10px] uppercase tracking-[0.12em] text-faint">
                 Dispatch console
               </p>

@@ -46,6 +46,11 @@ pub enum Permission {
     SettingsManage,
     DatabaseBackup,
     DatabaseRestore,
+    BolosView,
+    BolosManage,
+    ShiftsView,
+    ShiftsManage,
+    StatsView,
 }
 
 impl Permission {
@@ -81,6 +86,11 @@ impl Permission {
         Permission::SettingsManage,
         Permission::DatabaseBackup,
         Permission::DatabaseRestore,
+        Permission::BolosView,
+        Permission::BolosManage,
+        Permission::ShiftsView,
+        Permission::ShiftsManage,
+        Permission::StatsView,
     ];
 
     pub fn key(self) -> &'static str {
@@ -116,6 +126,11 @@ impl Permission {
             Permission::SettingsManage => "settings.manage",
             Permission::DatabaseBackup => "database.backup",
             Permission::DatabaseRestore => "database.restore",
+            Permission::BolosView => "bolos.view",
+            Permission::BolosManage => "bolos.manage",
+            Permission::ShiftsView => "shifts.view",
+            Permission::ShiftsManage => "shifts.manage",
+            Permission::StatsView => "stats.view",
         }
     }
 
@@ -152,6 +167,11 @@ impl Permission {
             Permission::SettingsManage => "Manage settings",
             Permission::DatabaseBackup => "Back up database",
             Permission::DatabaseRestore => "Restore database",
+            Permission::BolosView => "View BOLO board",
+            Permission::BolosManage => "Manage BOLOs",
+            Permission::ShiftsView => "View duty roster",
+            Permission::ShiftsManage => "Manage duty roster",
+            Permission::StatsView => "View statistics",
         }
     }
 
@@ -178,9 +198,12 @@ impl Permission {
             | Permission::DispatchClose
             | Permission::DispatchUnits => "Dispatch",
             Permission::VehiclesView | Permission::EmergencyView | Permission::LogsView => "Server",
+            Permission::BolosView | Permission::BolosManage | Permission::StatsView => "Operations",
             Permission::StaffView
             | Permission::StaffManage
             | Permission::RolesManage
+            | Permission::ShiftsView
+            | Permission::ShiftsManage
             | Permission::AuditView => "Staff",
             Permission::ApiConfigure
             | Permission::SettingsManage

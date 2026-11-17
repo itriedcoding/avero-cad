@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time to improve ER:LC CAD. This project integrates with a live game API and
+Thanks for taking the time to improve Avero CAD. This project integrates with a live game API and
 executes real server commands, so the bar for correctness and safety is high.
 
 ## Ground rules
@@ -10,7 +10,7 @@ executes real server commands, so the bar for correctness and safety is high.
   implement the closest legitimate behaviour.
 - **Business logic belongs in Rust.** The Tauri shell (`src-tauri`) only marshals arguments; the
   frontend only renders and collects input. Anything touching the API, database, permissions or
-  credentials goes in `crates/erlc-cad-core`.
+  credentials goes in `crates/avero-cad-core`.
 - **Permissions are enforced server-side.** Every new IPC command must authenticate the token and
   require a permission key. Never trust a frontend check.
 - **Never commit secrets.** No server keys, tokens or captured request headers.
@@ -19,7 +19,7 @@ executes real server commands, so the bar for correctness and safety is high.
 
 ```bash
 npm install
-cargo test -p erlc-cad-core     # backend: works on Linux/macOS/Windows
+cargo test -p avero-cad-core     # backend: works on Linux/macOS/Windows
 npm run test                    # frontend unit tests
 npm run build                   # typecheck + production bundle
 ```
@@ -34,7 +34,7 @@ npm run tauri dev
 
 | Path                     | Purpose                                                        |
 | ------------------------ | -------------------------------------------------------------- |
-| `crates/erlc-cad-core`   | API client, database, permissions, services, security          |
+| `crates/avero-cad-core`   | API client, database, permissions, services, security          |
 | `src-tauri`              | Tauri window, app state, IPC command registry                  |
 | `src`                    | React frontend: pages, components, hooks, state, typed IPC     |
 | `migrations`             | SQL schema, indexes, seed roles/permissions/command policies   |
@@ -42,7 +42,7 @@ npm run tauri dev
 
 ## Adding a feature
 
-1. Add or extend the model in `crates/erlc-cad-core/src/models.rs`.
+1. Add or extend the model in `crates/avero-cad-core/src/models.rs`.
 2. Implement the behaviour in the relevant `services/` module, returning `AppResult<_>`.
 3. Add a thin `#[tauri::command]` in `src-tauri/src/commands/` and register it in
    `src-tauri/src/lib.rs`; keep argument names snake_case in Rust (the frontend sends camelCase).
@@ -55,7 +55,7 @@ npm run tauri dev
 ## Database changes
 
 Never edit an applied migration. Add `migrations/000N_description.sql`, register it in the migration
-list inside `crates/erlc-cad-core/src/db/mod.rs`, and add a test that opens an in-memory database and
+list inside `crates/avero-cad-core/src/db/mod.rs`, and add a test that opens an in-memory database and
 asserts the new shape. Keep indexes and foreign keys explicit.
 
 ## Code style

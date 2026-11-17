@@ -53,6 +53,27 @@ export function formatDuration(ms: number | null | undefined): string {
   return `${minutes}m ${Math.round(seconds % 60)}s`;
 }
 
+/** Compact human duration for shift totals: "45m", "3h 24m". */
+export function formatSpan(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return "—";
+  if (ms <= 0) return "0m";
+  const totalMinutes = Math.floor(ms / 60_000);
+  if (totalMinutes === 0) return `${Math.max(1, Math.floor(ms / 1000))}s`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+}
+
+/** Running clock for an open shift: "HH:MM:SS". */
+export function formatElapsed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return [hours, minutes, seconds].map((value) => value.toString().padStart(2, "0")).join(":");
+}
+
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return "—";
   const units = ["B", "KB", "MB", "GB"];
