@@ -14,12 +14,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-white text-black border border-white hover:bg-white/90 active:bg-white/80 disabled:bg-white/40 disabled:border-white/40",
+    "border border-accent-soft/70 bg-accent text-[#0b0507] shadow-[inset_0_1px_0_0_rgb(255_255_255/0.28),0_10px_28px_-14px_rgb(255_42_58/0.9)] hover:border-accent-soft hover:bg-accent-soft active:bg-accent",
   secondary:
-    "bg-surface-2 text-ink border border-line hover:border-line-strong hover:bg-surface-3 disabled:text-faint",
-  ghost: "bg-transparent text-muted border border-transparent hover:bg-surface-2 hover:text-ink",
+    "border border-white/10 bg-white/[0.045] text-ink hover:border-accent/45 hover:bg-white/[0.07] disabled:text-faint",
+  ghost:
+    "border border-transparent bg-transparent text-muted hover:bg-white/[0.06] hover:text-ink",
   danger:
-    "bg-transparent text-danger border border-danger/40 hover:bg-danger/10 hover:border-danger/60 disabled:text-danger/40",
+    "border border-danger/45 bg-danger/10 text-danger hover:border-danger/70 hover:bg-danger/15 disabled:text-danger/40",
 };
 
 const SIZES: Record<Size, string> = {
@@ -37,8 +38,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={rest.type ?? "button"}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex select-none items-center justify-center rounded-md font-medium transition-colors duration-100",
-        "focus-visible:ring-2 focus-visible:ring-white/20",
+        "inline-flex select-none items-center justify-center rounded-[10px] font-bold transition-colors duration-100",
+        "focus-visible:ring-2 focus-visible:ring-accent/45",
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -67,9 +68,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       title={label}
       aria-label={label}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-muted transition-colors",
-        "hover:bg-surface-2 hover:text-ink focus-visible:ring-2 focus-visible:ring-white/20",
-        variant === "secondary" && "border-line bg-surface-2 text-ink hover:border-line-strong",
+        "inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-transparent text-muted transition-colors",
+        "hover:bg-white/[0.07] hover:text-ink focus-visible:ring-2 focus-visible:ring-accent/40",
+        variant === "secondary" && "border-white/10 bg-white/[0.05] text-ink hover:border-accent/40",
         className,
       )}
       {...rest}

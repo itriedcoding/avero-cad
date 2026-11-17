@@ -51,14 +51,14 @@ export function DataTable<T>({
     <div className="min-w-0">
       <div className="overflow-auto" style={maxHeight ? { maxHeight } : undefined}>
         <table className="w-full border-collapse text-left">
-          <thead className="sticky top-0 z-10 bg-surface">
+          <thead className="sticky top-0 z-10 bg-[#0c090b]/95 backdrop-blur-md">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
                   style={column.width ? { width: column.width } : undefined}
                   className={cn(
-                    "whitespace-nowrap border-b border-line px-3 py-2 text-[11px] font-medium uppercase tracking-[0.08em] text-faint",
+                    "whitespace-nowrap border-b border-line px-3 py-2 text-[11px] font-bold uppercase tracking-[0.09em] text-faint",
                     column.align === "right" && "text-right",
                     column.align === "center" && "text-center",
                     column.className,
@@ -80,7 +80,7 @@ export function DataTable<T>({
                   className={cn(
                     "border-b border-line/70 last:border-0",
                     onRowClick && "cursor-pointer row-hover",
-                    selected && "bg-white/[0.055]",
+                    selected && "bg-accent/[0.1]",
                   )}
                 >
                   {columns.map((column) => (

@@ -77,7 +77,7 @@ export default function VehiclesPage() {
                   <span className="flex items-center gap-2">
                     <span
                       className="h-3.5 w-3.5 shrink-0 rounded-sm border border-line"
-                      style={{ backgroundColor: safeHexColor(row.colorHex) ?? "#1b1b20" }}
+                      style={{ backgroundColor: safeHexColor(row.colorHex) ?? "#1b1417" }}
                       aria-hidden="true"
                     />
                     <span className="min-w-0">

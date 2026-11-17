@@ -3,11 +3,11 @@ import { cn } from "@/lib/cn";
 import type { Tone } from "@/lib/status";
 
 const TONES: Record<Tone, string> = {
-  neutral: "border-line-strong bg-surface-3 text-ink",
-  muted: "border-line bg-surface-2 text-muted",
-  positive: "border-white/25 bg-white/10 text-white",
-  warning: "border-white/20 bg-transparent text-paper-200",
-  danger: "border-danger/35 bg-danger/10 text-danger",
+  neutral: "border-white/12 bg-white/[0.06] text-ink",
+  muted: "border-white/10 bg-transparent text-muted",
+  positive: "border-accent/45 bg-accent/12 text-accent-soft",
+  warning: "border-warn/40 bg-warn/10 text-warn",
+  danger: "border-danger/55 bg-danger/16 text-[#ffd9dc]",
 };
 
 export function Badge({
@@ -24,7 +24,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 text-[11px] font-medium leading-4",
+        "inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 text-[11px] font-bold uppercase leading-4 tracking-[0.04em]",
         TONES[tone],
         className,
       )}
@@ -34,11 +34,11 @@ export function Badge({
           className={cn(
             "h-1.5 w-1.5 rounded-full",
             tone === "positive"
-              ? "bg-white"
+              ? "bg-accent"
               : tone === "danger"
                 ? "bg-danger"
                 : tone === "warning"
-                  ? "bg-paper-300"
+                  ? "bg-warn"
                   : "bg-faint",
           )}
         />
@@ -60,11 +60,11 @@ export function StatusDot({
 }) {
   const color =
     tone === "online"
-      ? "bg-white"
+      ? "bg-accent shadow-[0_0_10px_rgb(255_42_58/0.85)]"
       : tone === "offline"
         ? "bg-danger"
         : tone === "warn"
-          ? "bg-paper-300"
+          ? "bg-warn"
           : "bg-faint";
   return (
     <span

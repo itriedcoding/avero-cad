@@ -35,7 +35,7 @@ export function Modal({
   return createPortal(
     <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-[#0a0406]/80 backdrop-blur-[6px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -44,13 +44,13 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "relative z-10 my-auto w-full animate-fade-in rounded-lg border border-line-strong bg-surface shadow-[0_24px_64px_rgba(0,0,0,0.65)]",
+          "glass relative z-10 my-auto w-full animate-fade-in rounded-2xl",
           width,
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-line px-4 py-3">
+        <div className="flex items-start justify-between gap-4 border-b border-line/80 px-4 py-3">
           <div className="min-w-0">
-            <h2 className="text-[13px] font-semibold text-ink">{title}</h2>
+            <h2 className="text-[13px] font-bold tracking-tight text-ink">{title}</h2>
             {description ? (
               <p className="mt-0.5 text-xs leading-5 text-muted">{description}</p>
             ) : null}

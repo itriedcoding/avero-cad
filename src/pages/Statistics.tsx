@@ -30,9 +30,9 @@ function DailyChart({ data }: { data: DailyStatView[] }) {
         {data.map((day) => (
           <div key={day.date} className="flex h-full min-w-0 flex-1 items-end gap-[2px]">
             {[
-              { value: day.callsOpened, tone: "bg-white/85", label: "calls opened" },
-              { value: day.moderation, tone: "bg-white/45", label: "moderation actions" },
-              { value: day.commands, tone: "bg-white/20", label: "commands" },
+              { value: day.callsOpened, tone: "bg-accent", label: "calls opened" },
+              { value: day.moderation, tone: "bg-accent/55", label: "moderation actions" },
+              { value: day.commands, tone: "bg-accent/28", label: "commands" },
             ].map((series) => (
               <div
                 key={series.label}
@@ -50,13 +50,13 @@ function DailyChart({ data }: { data: DailyStatView[] }) {
         <span>{data[0]?.date.slice(5) ?? ""}</span>
         <span className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-white/85" /> Calls
+            <span className="h-2 w-2 rounded-sm bg-accent" /> Calls
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-white/45" /> Moderation
+            <span className="h-2 w-2 rounded-sm bg-accent/55" /> Moderation
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-white/20" /> Commands
+            <span className="h-2 w-2 rounded-sm bg-accent/28" /> Commands
           </span>
         </span>
         <span>{data[data.length - 1]?.date.slice(5) ?? ""}</span>
@@ -75,7 +75,7 @@ function HourChart({ data }: { data: HourStatView[] }) {
           return (
             <div
               key={hour.hour}
-              className="flex-1 rounded-t bg-white/60"
+              className="flex-1 rounded-t bg-accent/70"
               style={{ height: total > 0 ? `${Math.max(4, (total / peak) * 100)}%` : "0%" }}
               title={`${hour.hour.toString().padStart(2, "0")}:00 — ${hour.calls} calls, ${hour.moderation} moderation, ${hour.commands} commands`}
             />

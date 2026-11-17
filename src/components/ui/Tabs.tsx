@@ -27,10 +27,10 @@ export function Tabs<T extends string>({
             type="button"
             onClick={() => onChange(item.value)}
             className={cn(
-              "flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors",
+              "flex items-center gap-1.5 whitespace-nowrap rounded-[9px] border px-2.5 py-1.5 text-[12px] font-bold transition-colors",
               active
-                ? "bg-surface-3 text-ink"
-                : "text-muted hover:bg-surface-2 hover:text-ink",
+                ? "border-accent/45 bg-accent/12 text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.09)]"
+                : "border-transparent text-muted hover:bg-white/[0.06] hover:text-ink",
             )}
             aria-current={active ? "page" : undefined}
           >

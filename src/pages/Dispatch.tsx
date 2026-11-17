@@ -187,7 +187,7 @@ export default function DispatchPage() {
                       type="button"
                       onClick={() => setSelectedId(call.id)}
                       className={`flex w-full items-start gap-3 px-3.5 py-3 text-left transition-colors ${
-                        selectedId === call.id ? "bg-white/[0.055]" : "row-hover"
+                        selectedId === call.id ? "bg-accent/[0.1]" : "row-hover"
                       }`}
                     >
                       <div className="min-w-0 flex-1">

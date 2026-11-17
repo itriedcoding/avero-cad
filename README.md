@@ -9,8 +9,9 @@ list) and to the public Roblox Users and Thumbnails APIs for avatars. All networ
 authentication, permission checks, credential handling and command execution happen in Rust; the
 React frontend is a rendering and input layer only.
 
-The interface is deliberately monochrome: near-black surfaces, white accents, and a single red for
-destructive actions and errors.
+The interface is carbon black with a single red accent: layered liquid-glass panels (blurred
+backdrop, specular gradient rim, ambient red light and a faint film grain), bold type at every size,
+and red reserved for the primary action, live state and destructive actions.
 
 ---
 

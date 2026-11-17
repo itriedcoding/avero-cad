@@ -57,16 +57,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role="status"
-            className="pointer-events-auto animate-fade-in overflow-hidden rounded-md border border-line bg-surface-2 shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+            className="glass pointer-events-auto animate-fade-in rounded-xl"
           >
             <div className="flex items-start gap-3 p-3">
-              <span className="mt-0.5 shrink-0 text-muted">
+              <span className="mt-0.5 shrink-0 text-accent-soft">
                 {toast.tone === "success" ? (
                   <CheckCircle2 size={16} />
                 ) : toast.tone === "error" ? (
                   <AlertTriangle size={16} className="text-danger" />
                 ) : toast.tone === "warning" ? (
-                  <AlertTriangle size={16} />
+                  <AlertTriangle size={16} className="text-warn" />
                 ) : (
                   <Info size={16} />
                 )}
@@ -89,8 +89,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               className={
                 toast.tone === "error"
-                  ? "h-px w-full bg-danger/40"
-                  : "h-px w-full bg-line-strong"
+                  ? "mx-3 mb-2.5 h-[2px] rounded-full bg-danger/70"
+                  : toast.tone === "warning"
+                    ? "mx-3 mb-2.5 h-[2px] rounded-full bg-warn/60"
+                    : "mx-3 mb-2.5 h-[2px] rounded-full bg-accent/45"
               }
             />
           </div>

@@ -38,20 +38,20 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 bg-canvas">
-      <div className="hidden w-[46%] flex-col justify-between border-r border-line bg-surface p-8 lg:flex">
+    <div className="flex h-full min-h-0">
+      <div className="chrome hidden w-[46%] flex-col justify-between border-r border-line/80 p-8 lg:flex">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold text-ink">
+          <div className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-accent/50 bg-accent/15 text-[11px] font-bold text-accent-soft shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_0_20px_-6px_rgb(255_42_58/0.9)]">
             AC
           </div>
           <div>
-            <p className="text-[13px] font-semibold tracking-tight text-ink">Avero CAD</p>
+            <p className="text-[13px] font-bold tracking-tight text-ink">Avero CAD</p>
             <p className="text-[10px] uppercase tracking-[0.14em] text-faint">Windows desktop console</p>
           </div>
         </div>
 
         <div className="max-w-sm">
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight text-ink">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-ink">
             Dispatch, moderation and server control for your ER:LC private server.
           </h1>
           <p className="mt-3 text-[13px] leading-6 text-muted">
@@ -78,13 +78,13 @@ export default function AuthPage() {
       </div>
 
       <div className="flex min-w-0 flex-1 items-center justify-center p-6">
-        <div className="w-full max-w-sm">
+        <div className="glass w-full max-w-sm rounded-2xl p-6">
           <div className="mb-6 lg:hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold text-ink">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-accent/50 bg-accent/15 text-[11px] font-bold text-accent-soft">
               AC
             </div>
           </div>
-          <h2 className="text-lg font-semibold tracking-tight text-ink">
+          <h2 className="text-lg font-bold tracking-tight text-ink">
             {needsSetup ? "Set up your server owner account" : "Sign in"}
           </h2>
           <p className="mt-1 text-[13px] leading-5 text-muted">
@@ -142,7 +142,7 @@ export default function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-5 border-t border-line pt-4">
+          <div className="mt-5 border-t border-line/80 pt-4">
             <p className="text-[11px] leading-5 text-faint">
               Database: <span className="mono break-all">{bootstrap?.databasePath ?? "—"}</span>
             </p>

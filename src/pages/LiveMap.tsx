@@ -152,7 +152,7 @@ export default function LiveMapPage() {
             </div>
 
             <div
-              className="relative w-full cursor-grab touch-none select-none overflow-hidden rounded-md border border-line bg-[#0b0b0d] active:cursor-grabbing"
+              className="relative w-full cursor-grab touch-none select-none overflow-hidden rounded-md border border-line/80 bg-[#070508] active:cursor-grabbing"
               style={{ aspectRatio: "1 / 1" }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
@@ -180,8 +180,8 @@ export default function LiveMapPage() {
                       style={toPosition(call.x ?? 0, call.z ?? 0)}
                       className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-sm border text-[9px] font-semibold transition-colors ${
                         active
-                          ? "border-white bg-white px-1 text-black"
-                          : "border-white/60 bg-black/70 px-1 text-white hover:bg-white hover:text-black"
+                          ? "border-accent bg-accent px-1 text-[#0b0507] shadow-[0_0_14px_rgb(255_42_58/0.8)]"
+                          : "border-accent/50 bg-black/70 px-1 text-accent-soft hover:bg-accent hover:text-[#0b0507]"
                       }`}
                       title={`Emergency call #${call.callNumber} — ${call.description}`}
                     >
@@ -201,8 +201,8 @@ export default function LiveMapPage() {
                       style={toPosition(location.x, location.z)}
                       className={`absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border transition-transform ${
                         active
-                          ? "border-white bg-white ring-2 ring-white/40"
-                          : "border-white/70 bg-white/20 hover:bg-white"
+                          ? "border-accent bg-accent ring-2 ring-accent/35 shadow-[0_0_12px_rgb(255_42_58/0.9)]"
+                          : "border-accent/55 bg-accent/25 hover:bg-accent"
                       }`}
                       title={`${player.username} · ${player.team}${location.postal ? ` · ${location.postal}` : ""}`}
                       aria-label={`${player.username} position`}
@@ -356,7 +356,7 @@ export default function LiveMapPage() {
                         onClick={() => setSelected({ kind: "player", key: player.username })}
                         className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left transition-colors ${
                           selected?.kind === "player" && selected.key === player.username
-                            ? "bg-white/[0.055]"
+                            ? "bg-accent/[0.1]"
                             : "row-hover"
                         }`}
                       >

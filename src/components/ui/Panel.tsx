@@ -27,7 +27,7 @@ export function PanelHeader({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-start justify-between gap-3 border-b border-line",
+        "flex flex-wrap items-start justify-between gap-3 border-b border-line/80",
         compact ? "px-3.5 py-2.5" : "px-4 py-3",
       )}
     >
@@ -70,13 +70,18 @@ export function StatTile({
   return (
     <div className="panel flex flex-col justify-between gap-3 px-4 py-3.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-faint">
+        <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-faint">
           {label}
         </span>
-        {icon ? <span className="text-faint">{icon}</span> : null}
+        {icon ? <span className="text-accent/70">{icon}</span> : null}
       </div>
       <div>
-        <p className={cn("text-2xl font-semibold leading-none tracking-tight", accent ? "text-white" : "text-ink")}>
+        <p
+          className={cn(
+            "text-2xl font-bold leading-none tracking-tight",
+            accent ? "text-accent-soft" : "text-ink",
+          )}
+        >
           {value}
         </p>
         {detail ? <p className="mt-1.5 text-xs text-muted">{detail}</p> : null}

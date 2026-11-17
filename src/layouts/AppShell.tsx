@@ -240,10 +240,10 @@ export default function AppShell() {
   const allowed = has(PAGE_PERMISSIONS[route]);
 
   return (
-    <div className="flex h-full min-h-0 bg-canvas">
+    <div className="flex h-full min-h-0">
       <aside
         className={cn(
-          "flex shrink-0 flex-col border-r border-line bg-surface transition-[width] duration-150",
+          "chrome flex shrink-0 flex-col border-r border-line/80 transition-[width] duration-150",
           collapsed ? "w-[60px]" : "w-[228px]",
         )}
       >
@@ -253,12 +253,12 @@ export default function AppShell() {
             collapsed ? "justify-center px-2" : "gap-2.5 px-4",
           )}
         >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-line-strong bg-surface-3 text-[11px] font-bold tracking-tight text-ink">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border border-accent/50 bg-accent/15 text-[11px] font-bold tracking-tight text-accent-soft shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_0_18px_-6px_rgb(255_42_58/0.9)]">
             AC
           </div>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold tracking-tight text-ink">Avero CAD</p>
+              <p className="truncate text-[13px] font-bold tracking-tight text-ink">Avero CAD</p>
               <p className="truncate text-[10px] uppercase tracking-[0.12em] text-faint">
                 Dispatch console
               </p>
@@ -290,18 +290,18 @@ export default function AppShell() {
                           onClick={() => navigate(item.key)}
                           title={collapsed ? item.label : undefined}
                           className={cn(
-                            "flex w-full items-center rounded-md text-[13px] transition-colors",
+                            "flex w-full items-center rounded-[10px] border text-[13px] transition-colors",
                             collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-[7px]",
                             active
-                              ? "bg-surface-3 text-ink"
-                              : "text-muted hover:bg-surface-2 hover:text-ink",
+                              ? "border-accent/40 bg-accent/12 text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.1)]"
+                              : "border-transparent text-muted hover:bg-white/[0.06] hover:text-ink",
                           )}
                           aria-current={active ? "page" : undefined}
                         >
-                          <Icon size={15} className={active ? "text-white" : "text-faint"} />
+                          <Icon size={15} className={active ? "text-accent" : "text-faint"} />
                           {!collapsed ? <span className="truncate">{item.label}</span> : null}
                           {!collapsed && active ? (
-                            <span className="ml-auto h-3.5 w-px bg-white/60" />
+                            <span className="ml-auto h-3.5 w-[2px] rounded-full bg-accent shadow-[0_0_10px_rgb(255_42_58/0.9)]" />
                           ) : null}
                         </button>
                       </li>
@@ -313,12 +313,12 @@ export default function AppShell() {
           })}
         </nav>
 
-        <div className="border-t border-line p-2">
+        <div className="border-t border-line/80 p-2">
           <button
             type="button"
             onClick={() => setCollapsed((value) => !value)}
             className={cn(
-              "flex w-full items-center rounded-md py-1.5 text-[12px] text-faint transition-colors hover:bg-surface-2 hover:text-ink",
+              "flex w-full items-center rounded-[10px] py-1.5 text-[12px] text-faint transition-colors hover:bg-white/[0.06] hover:text-ink",
               collapsed ? "justify-center" : "gap-2 px-2",
             )}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -330,12 +330,12 @@ export default function AppShell() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface px-4">
+        <header className="chrome flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line/80 px-4">
           <div className="flex min-w-0 items-center gap-3">
-            <h1 className="truncate text-[13px] font-semibold tracking-tight text-ink">
+                            <h1 className="truncate text-[13px] font-bold tracking-tight text-ink">
               {ROUTE_TITLES[route]}
             </h1>
-            <span className="hidden items-center gap-1.5 rounded border border-line bg-surface-2 px-2 py-0.5 text-[11px] text-muted md:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-[8px] border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[11px] text-ink md:inline-flex">
               <StatusDot
                 tone={
                   connectionState === "connected"
@@ -363,7 +363,7 @@ export default function AppShell() {
               <button
                 type="button"
                 onClick={() => navigate("settings")}
-                className="hidden items-center gap-1.5 rounded border border-white/25 bg-white/10 px-2 py-1 text-[11px] font-medium text-ink transition-colors hover:bg-white/15 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-[8px] border border-accent/45 bg-accent/12 px-2 py-1 text-[11px] font-bold text-accent-soft transition-colors hover:bg-accent/20 sm:inline-flex"
                 title={availableUpdate.detail}
               >
                 <Download size={12} />
@@ -385,11 +385,11 @@ export default function AppShell() {
               <button
                 type="button"
                 onClick={() => setMenuOpen((value) => !value)}
-                className="flex items-center gap-2 rounded-md border border-line bg-surface-2 py-1 pl-1 pr-2.5 text-left transition-colors hover:border-line-strong"
+                className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.05] py-1 pl-1 pr-2.5 text-left transition-colors hover:border-accent/40"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded border border-line bg-surface-3 text-[10px] font-semibold text-ink">
+                <span className="flex h-6 w-6 items-center justify-center rounded-[7px] border border-accent/40 bg-accent/12 text-[10px] font-bold text-accent-soft">
                   {session.user.displayName.slice(0, 2).toUpperCase()}
                 </span>
                 <span className="hidden min-w-0 sm:block">
@@ -404,9 +404,9 @@ export default function AppShell() {
               {menuOpen ? (
                 <div
                   role="menu"
-                  className="absolute right-0 top-[calc(100%+6px)] z-20 w-52 animate-fade-in overflow-hidden rounded-md border border-line-strong bg-surface shadow-[0_16px_40px_rgba(0,0,0,0.6)]"
+                  className="glass absolute right-0 top-[calc(100%+6px)] z-20 w-52 animate-fade-in overflow-hidden rounded-xl"
                 >
-                  <div className="border-b border-line px-3 py-2.5">
+                  <div className="border-b border-line/80 px-3 py-2.5">
                     <p className="truncate text-[12px] font-medium text-ink">
                       {session.user.username}
                     </p>
@@ -420,7 +420,7 @@ export default function AppShell() {
                         setMenuOpen(false);
                         navigate("settings");
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-muted transition-colors hover:bg-accent/12 hover:text-ink"
                     >
                       <Settings size={13} /> Settings
                     </button>
@@ -432,7 +432,7 @@ export default function AppShell() {
                       setMenuOpen(false);
                       signOut().catch(() => undefined);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] text-muted transition-colors hover:bg-accent/12 hover:text-ink"
                   >
                     <LogOut size={13} /> Sign out
                   </button>

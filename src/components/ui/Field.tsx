@@ -118,14 +118,16 @@ export function Toggle({
         onClick={() => onChange(!checked)}
         className={cn(
           "relative mt-0.5 h-5 w-9 shrink-0 rounded-full border transition-colors",
-          checked ? "border-white bg-white" : "border-line-strong bg-surface-3",
+          checked
+            ? "border-accent bg-accent shadow-[0_0_16px_-2px_rgb(255_42_58/0.8)]"
+            : "border-white/12 bg-white/[0.06]",
           disabled && "opacity-40",
         )}
       >
         <span
           className={cn(
             "absolute top-0.5 h-3.5 w-3.5 rounded-full transition-transform duration-150",
-            checked ? "translate-x-[18px] bg-black" : "translate-x-0.5 bg-muted",
+            checked ? "translate-x-[18px] bg-[#0b0507]" : "translate-x-0.5 bg-muted",
           )}
         />
       </button>
@@ -153,7 +155,7 @@ export function Checkbox({
     >
       <input
         type="checkbox"
-        className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-white"
+        className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer accent-accent"
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}

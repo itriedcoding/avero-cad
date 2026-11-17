@@ -159,7 +159,7 @@ export default function DutyRosterPage() {
           detail={
             current ? (
               <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgb(255_42_58/0.9)]" />
                 Started {formatRelative(current.startedAt)}
               </span>
             ) : (
