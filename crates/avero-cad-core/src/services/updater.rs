@@ -473,6 +473,45 @@ mod tests {
     }
 
     #[test]
+    fn parses_the_published_release_payload() {
+        // Shape captured from the live v1.2.0 release, including asset digests.
+        let json = r#"{
+          "tag_name": "v1.2.0",
+          "html_url": "https://github.com/itriedcoding/avero-cad/releases/tag/v1.2.0",
+          "published_at": "2026-11-17T04:45:54Z",
+          "body": "Windows x64 installers for Avero CAD 1.2.0.",
+          "draft": false,
+          "prerelease": false,
+          "assets": [
+            {
+              "name": "Avero.CAD_1.2.0_x64-setup.exe",
+              "size": 2488532,
+              "browser_download_url": "https://github.com/itriedcoding/avero-cad/releases/download/v1.2.0/Avero.CAD_1.2.0_x64-setup.exe",
+              "digest": "sha256:a1a24c5cf98a904e6b32f1b54a479137a38a9b59dcdaec7c3a97c9f8b4417379"
+            },
+            {
+              "name": "Avero.CAD_1.2.0_x64_en-US.msi",
+              "size": 3297280,
+              "browser_download_url": "https://github.com/itriedcoding/avero-cad/releases/download/v1.2.0/Avero.CAD_1.2.0_x64_en-US.msi",
+              "digest": "sha256:80537d2763df52be43f36da71b1781f1b86c228511a6b4702fa9ba3d18c3fe01"
+            }
+          ]
+        }"#;
+        let release: GhRelease = serde_json::from_str(json).unwrap();
+        assert_eq!(release.tag_name, "v1.2.0");
+        assert!(!release.draft && !release.prerelease);
+        let asset = select_installer(&release.assets).unwrap();
+        assert!(asset.name.ends_with("-setup.exe"));
+        assert_eq!(asset.size, 2_488_532);
+        assert_eq!(
+            digest_checksum(asset.digest.as_deref().unwrap()).as_deref(),
+            Some("a1a24c5cf98a904e6b32f1b54a479137a38a9b59dcdaec7c3a97c9f8b4417379")
+        );
+        assert!(is_newer(&release.tag_name, "1.1.0"));
+        assert!(!is_newer(&release.tag_name, "1.2.0"));
+    }
+
+    #[test]
     fn hashes_bytes_and_sanitises_file_names() {
         assert_eq!(
             sha256_hex(b"abc"),

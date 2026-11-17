@@ -92,17 +92,3 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: --bundles nsis,msi
-
-      - name: Publish installer checksums
-        if: steps.existing.outputs.published == 'false'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd src-tauri/target/release/bundle
-          {
-            (cd nsis && sha256sum ./*.exe)
-            (cd msi && sha256sum ./*.msi)
-          } > SHA256SUMS.txt
-          cat SHA256SUMS.txt
-          gh release upload "v${{ steps.version.outputs.version }}" SHA256SUMS.txt --clobber

@@ -289,8 +289,9 @@ leaving the app: **Settings → Updates**, or the header chip that appears when 
   with no token, then compares the release tag with the running build using a numeric version
   comparison. Drafts and pre-releases are never offered.
 - **Install** downloads the release's `x64-setup.exe` from that release, hashes it and compares the
-  result with the SHA-256 digest GitHub reports for the asset (`digest`), falling back to the
-  release's `SHA256SUMS.txt`. A mismatch discards the file and reports the error; nothing is run.
+  result with the SHA-256 digest GitHub reports for the asset (`digest`); when a release also ships a
+  `SHA256SUMS.txt`, that file is used as a fallback. A mismatch discards the file and reports the
+  error; nothing is run.
 - Only a verified installer is written to the app data folder and started. The NSIS installer runs
   in silent mode, closes Avero CAD so the binary can be replaced, and prompts for elevation.
   Start the app again from the Start menu afterwards.
@@ -305,20 +306,19 @@ minisign key, so Windows SmartScreen still warns about the unsigned installer; s
 
 ## Releases
 
-Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases),
-together with a `SHA256SUMS.txt` for every build:
+Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
 
 - `Avero.CAD_1.2.0_x64-setup.exe` — NSIS installer (recommended)
 - `Avero.CAD_1.2.0_x64_en-US.msi` — MSI package for managed deployment
-- `SHA256SUMS.txt` — SHA-256 of both files, also used by the in-app updater
 
 **1.2.0** adds [in-app updates](#updates) from GitHub Releases and puts the on-duty roster and
 active BOLOs on the dashboard. **1.1.0** introduced the Avero CAD name, the BOLO board, the duty
 roster and the statistics module. The identifier changed to `com.averocad.desktop` in 1.1.0, so
 1.1.0 and later use a fresh data directory: a 1.0.0 database is not picked up automatically.
 
-Installers are **unsigned**, so Windows SmartScreen warns on first run. Verify the download against
-`SHA256SUMS.txt`, or the checksum shown in the app's update prompt.
+Installers are **unsigned**, so Windows SmartScreen warns on first run. To verify a download, compare
+its SHA-256 with the digest GitHub reports for the asset (`GET /repos/itriedcoding/avero-cad/releases/latest`
+returns `assets[].digest`); the in-app updater performs exactly this check before running anything.
 
 `.github/workflows/release.yml` builds on `windows-latest`, runs the Rust and frontend tests,
 invokes `tauri build` for NSIS and MSI, and attaches both installers to a GitHub Release named after
