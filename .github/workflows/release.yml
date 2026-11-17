@@ -79,8 +79,10 @@ jobs:
           releaseBody: |
             Windows x64 installers for Avero CAD ${{ steps.version.outputs.version }}.
 
-            - `Avero CAD_${{ steps.version.outputs.version }}_x64-setup.exe` — NSIS installer (recommended)
-            - `Avero CAD_${{ steps.version.outputs.version }}_x64_en-US.msi` — MSI package for managed deployment
+            Download the assets attached to this release:
+
+            - the `x64-setup.exe` file — NSIS installer (recommended)
+            - the `x64_en-US.msi` file — MSI package for managed deployment
 
             These builds are **unsigned**. Windows SmartScreen will warn on first run; verify the
             download came from this repository. WebView2 is bootstrapped by the installer when it is

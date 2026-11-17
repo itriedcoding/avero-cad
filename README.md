@@ -161,8 +161,8 @@ npm run tauri build -- --bundles nsis,msi
 Outputs:
 
 ```
-src-tauri/target/release/bundle/nsis/Avero CAD_<version>_x64-setup.exe
-src-tauri/target/release/bundle/msi/Avero CAD_<version>_x64_en-US.msi
+src-tauri/target/release/bundle/nsis/Avero.CAD_<version>_x64-setup.exe
+src-tauri/target/release/bundle/msi/Avero.CAD_<version>_x64_en-US.msi
 ```
 
 The same build runs automatically in GitHub Actions on a version tag (see [Releases](#releases)).
@@ -282,8 +282,8 @@ release workflow, which uploads the installers it produces.
 
 Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
 
-- `Avero CAD_1.1.0_x64-setup.exe` — NSIS installer (recommended)
-- `Avero CAD_1.1.0_x64_en-US.msi` — MSI package for managed deployment
+- `Avero.CAD_1.1.0_x64-setup.exe` — NSIS installer (recommended)
+- `Avero.CAD_1.1.0_x64_en-US.msi` — MSI package for managed deployment
 
 **1.1.0** introduces the Avero CAD name (`Avero CAD.exe`, publisher and install folder) together
 with the BOLO board, the duty roster and the statistics module. The application identifier changed to
