@@ -318,12 +318,15 @@ minisign key, so Windows SmartScreen still warns about the unsigned installer; s
 
 Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
 
-- `Avero.CAD_1.2.0_x64-setup.exe` — NSIS installer (recommended)
-- `Avero.CAD_1.2.0_x64_en-US.msi` — MSI package for managed deployment
+- `Avero.CAD_1.3.0_x64-setup.exe` — NSIS installer (recommended)
+- `Avero.CAD_1.3.0_x64_en-US.msi` — MSI package for managed deployment
 
-**1.2.0** adds [in-app updates](#updates) from GitHub Releases and puts the on-duty roster and
-active BOLOs on the dashboard. **1.1.0** introduced the Avero CAD name, the BOLO board, the duty
-roster and the statistics module. The identifier changed to `com.averocad.desktop` in 1.1.0, so
+**1.3.0** restyles the whole console in black and red liquid glass with bold type, teaches the
+updater which installer a copy came from so an MSI install is never overwritten with the NSIS
+package, and tracks started installers as pending so a cancelled elevation prompt is reported
+instead of counted as a success. **1.2.0** added [in-app updates](#updates) from GitHub Releases and
+put the on-duty roster and active BOLOs on the dashboard. **1.1.0** introduced the Avero CAD name,
+the BOLO board, the duty roster and the statistics module. The identifier changed to `com.averocad.desktop` in 1.1.0, so
 1.1.0 and later use a fresh data directory: a 1.0.0 database is not picked up automatically.
 
 Installers are **unsigned**, so Windows SmartScreen warns on first run. To verify a download, compare
@@ -343,15 +346,15 @@ To cut a release, bump the version and push:
 #   package.json "version"
 #   src-tauri/tauri.conf.json "version"
 #   Cargo.toml [workspace.package] version
-git commit -am "Release v1.2.0"
+git commit -am "Release v1.3.0"
 git push origin main
 ```
 
 A tag is also accepted if you prefer driving releases from tags:
 
 ```bash
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 Builds are **unsigned** unless you configure code-signing secrets. Windows SmartScreen will warn

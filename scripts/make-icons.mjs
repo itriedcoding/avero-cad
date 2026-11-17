@@ -1,5 +1,6 @@
 /**
- * Generates the monochrome application icons used by Tauri bundling.
+ * Generates the application icons used by Tauri bundling: a near-black tile
+ * with the red accent frame and dispatch bars, matching the console theme.
  * Run with `node scripts/make-icons.mjs` after changing the design.
  */
 import { deflateSync } from "node:zlib";
@@ -52,20 +53,25 @@ function roundedRectDistance(x, y, left, top, right, bottom, radius) {
   return Math.hypot(x - cx, y - cy) - radius;
 }
 
-/** Renders the icon at full size: black canvas, thin white frame, dispatch bars. */
+/** Renders the icon at full size: near-black tile, red frame, ink dispatch bars. */
 function renderBase() {
   const buffer = Buffer.alloc(SIZE * SIZE * 4);
-  const paint = (x, y, value, alpha = 255) => {
+  const paint = (x, y, [red, green, blue], alpha = 255) => {
     const index = (y * SIZE + x) * 4;
-    buffer[index] = value;
-    buffer[index + 1] = value;
-    buffer[index + 2] = value;
+    buffer[index] = red;
+    buffer[index + 1] = green;
+    buffer[index + 2] = blue;
     buffer[index + 3] = alpha;
   };
 
+  const TILE = [12, 8, 10];
+  const ACCENT = [255, 42, 58];
+  const ACCENT_DEEP = [104, 10, 22];
+  const PAPER = [247, 242, 243];
+
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
-      paint(x, y, 10);
+      paint(x, y, TILE);
     }
   }
 
@@ -73,9 +79,9 @@ function renderBase() {
   for (let y = 0; y < SIZE; y += 1) {
     for (let x = 0; x < SIZE; x += 1) {
       const distance = Math.abs(roundedRectDistance(x + 0.5, y + 0.5, 40, 40, SIZE - 40, SIZE - 40, 84));
-      if (distance < 7) paint(x, y, 244);
+      if (distance < 7) paint(x, y, ACCENT);
       const inner = Math.abs(roundedRectDistance(x + 0.5, y + 0.5, 58, 58, SIZE - 58, SIZE - 58, 70));
-      if (inner < 1.5) paint(x, y, 40);
+      if (inner < 1.5) paint(x, y, ACCENT_DEEP);
     }
   }
 
@@ -89,8 +95,8 @@ function renderBase() {
     for (let y = 0; y < SIZE; y += 1) {
       for (let x = 0; x < SIZE; x += 1) {
         const distance = roundedRectDistance(x + 0.5, y + 0.5, bar.left, bar.top, bar.right, bar.top + 34, 17);
-        if (distance < 0) paint(x, y, 250);
-        if (bar.dot && Math.hypot(x + 0.5 - 396, y + 0.5 - 207) < 17) paint(x, y, 250);
+        if (distance < 0) paint(x, y, PAPER);
+        if (bar.dot && Math.hypot(x + 0.5 - 396, y + 0.5 - 207) < 17) paint(x, y, ACCENT);
       }
     }
   }

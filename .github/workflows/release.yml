@@ -79,6 +79,9 @@ jobs:
           releaseBody: |
             Windows x64 installers for Avero CAD ${{ steps.version.outputs.version }}.
 
+            The console ships with the black and red liquid-glass interface, bold type at every
+            size and a matching app icon.
+
             Download the assets attached to this release:
 
             - the `x64-setup.exe` file — NSIS installer (recommended)
