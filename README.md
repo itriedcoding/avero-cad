@@ -292,11 +292,20 @@ leaving the app: **Settings → Updates**, or the header chip that appears when 
   result with the SHA-256 digest GitHub reports for the asset (`digest`); when a release also ships a
   `SHA256SUMS.txt`, that file is used as a fallback. A mismatch discards the file and reports the
   error; nothing is run.
-- Only a verified installer is written to the app data folder and started. The NSIS installer runs
-  in silent mode, closes Avero CAD so the binary can be replaced, and prompts for elevation.
-  Start the app again from the Start menu afterwards.
+- **Install method** is read from the Windows uninstall registry, because the same executable is
+  packaged into both installers. Only an **NSIS** install replaces itself: the installer runs in
+  silent mode, closes Avero CAD so the binary can be replaced, and prompts for elevation. An **MSI**
+  install is never overwritten with the NSIS package, since that would leave a second, unmanaged
+  copy beside it; Settings shows the matching MSI download instead, for an elevated install. A
+  portable or development build is told to install manually for the same reason.
+- Only a verified installer is written to the app data folder and started. Starting one records a
+  **pending update** before Windows is asked for permission. The next check compares it with the
+  running version: a restart on the new version marks it applied, while a still-old build keeps it
+  listed as incomplete after ten minutes, so a cancelled elevation prompt is reported instead of
+  being counted as a successful install.
 - Checking and installing require `settings.manage` and are recorded in the audit log
-  (`update.checked`, `update.verified`, `update.installer_started`).
+  (`update.checked`, `update.verified`, `update.installer_started`, `update.applied`,
+  `update.pending_dismissed`).
 - Updates are Windows-only, because the shipped installers are Windows installers. The check itself
   works on any platform.
 

@@ -20,6 +20,14 @@ pub struct ApiConfigRow {
 
 pub const DEFAULT_API_BASE_URL: &str = "https://api.erlc.gg";
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PendingUpdateRow {
+    pub version: String,
+    pub started_at: i64,
+    pub installer_path: String,
+    pub sha256: String,
+}
+
 fn parse_bool(map: &HashMap<String, String>, key: &str, default: bool) -> bool {
     map.get(key)
         .map(|v| matches!(v.trim(), "true" | "1" | "yes"))
@@ -175,6 +183,58 @@ impl Database {
     pub fn set_last_backup_at(&self, at: i64) -> AppResult<()> {
         self.set_settings(&[("last_backup_at".into(), at.to_string())])
     }
+
+    /// The most recent update whose installer was started but not yet observed
+    /// running. Kept across restarts so a cancelled elevation prompt is visible.
+    pub fn pending_update(&self) -> AppResult<Option<PendingUpdateRow>> {
+        let map = self.settings_map()?;
+        let version = map
+            .get("update_pending_version")
+            .cloned()
+            .unwrap_or_default();
+        let path = map
+            .get("update_pending_installer")
+            .cloned()
+            .unwrap_or_default();
+        if version.trim().is_empty() || path.trim().is_empty() {
+            return Ok(None);
+        }
+        let started_at = map
+            .get("update_pending_started_at")
+            .and_then(|value| value.trim().parse::<i64>().ok())
+            .unwrap_or(0);
+        let sha256 = map
+            .get("update_pending_sha256")
+            .cloned()
+            .unwrap_or_default();
+        Ok(Some(PendingUpdateRow {
+            version,
+            started_at,
+            installer_path: path,
+            sha256,
+        }))
+    }
+
+    pub fn set_pending_update(&self, row: &PendingUpdateRow) -> AppResult<()> {
+        self.set_settings(&[
+            ("update_pending_version".into(), row.version.clone()),
+            (
+                "update_pending_started_at".into(),
+                row.started_at.to_string(),
+            ),
+            (
+                "update_pending_installer".into(),
+                row.installer_path.clone(),
+            ),
+            ("update_pending_sha256".into(), row.sha256.clone()),
+        ])
+    }
+
+    pub fn clear_pending_update(&self) -> AppResult<()> {
+        let conn = self.lock()?;
+        conn.execute("DELETE FROM settings WHERE key LIKE 'update_pending_%'", [])?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -217,6 +277,27 @@ mod tests {
         let settings = db.settings_view().unwrap();
         assert_eq!(settings.refresh_interval_seconds, 5);
         assert_eq!(settings.map_scale, 20.0);
+    }
+
+    #[test]
+    fn remembers_and_clears_a_pending_update() {
+        let db = Database::open_in_memory().unwrap();
+        assert!(db.pending_update().unwrap().is_none());
+        let row = PendingUpdateRow {
+            version: "1.3.0".into(),
+            started_at: 1_700_000_000_000,
+            installer_path: "C:\\updates\\setup.exe".into(),
+            sha256: "abc".into(),
+        };
+        db.set_pending_update(&row).unwrap();
+        assert_eq!(db.pending_update().unwrap(), Some(row));
+        db.clear_pending_update().unwrap();
+        assert!(db.pending_update().unwrap().is_none());
+        // Unrelated settings survive clearing the record.
+        db.set_settings(&[("refresh_interval_seconds".into(), "30".into())])
+            .unwrap();
+        db.clear_pending_update().unwrap();
+        assert_eq!(db.settings_view().unwrap().refresh_interval_seconds, 30);
     }
 
     #[test]

@@ -836,6 +836,30 @@ pub struct TopModeratorView {
     pub failed: i64,
 }
 
+/// How this copy of Avero CAD was installed. Read from the Windows uninstall
+/// registry, because the same executable is packaged into both installers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum InstallKind {
+    /// Installed by the NSIS `*-setup.exe`: replaces itself silently.
+    Nsis,
+    /// Installed by the MSI package: only another MSI (elevated) may upgrade it.
+    Msi,
+    /// Portable or development build, or no uninstall entry was found.
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PendingUpdateView {
+    pub version: String,
+    pub started_at: i64,
+    pub installer_path: String,
+    pub sha256: String,
+    /// The installer was started a while ago and the running build is still old.
+    pub stalled: bool,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCheckView {
@@ -848,6 +872,10 @@ pub struct UpdateCheckView {
     pub asset_name: Option<String>,
     pub asset_size: Option<u64>,
     pub can_install: bool,
+    pub install_kind: InstallKind,
+    pub install_supported: bool,
+    pub manual_url: Option<String>,
+    pub pending: Option<PendingUpdateView>,
     pub detail: String,
 }
 
@@ -858,6 +886,7 @@ pub struct UpdateInstallView {
     pub installer_path: String,
     pub sha256: String,
     pub size_bytes: u64,
+    pub install_kind: InstallKind,
 }
 
 #[derive(Debug, Clone, Serialize)]

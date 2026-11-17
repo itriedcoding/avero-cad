@@ -8,22 +8,41 @@
 //!
 //! The check is read-only; installing requires `settings.manage`, an explicit
 //! confirmation and is recorded in the audit log.
+//!
+//! Both installers package the same executable, so the service reads the Windows
+//! uninstall registry to tell an NSIS installation from an MSI one. Only an NSIS
+//! copy replaces itself silently: dropping the NSIS package over an MSI install
+//! would leave a second, unmanaged copy on the machine, so MSI and portable
+//! copies are told to download the matching package instead.
+//!
+//! Starting an installer records a pending update. The next check reconciles it
+//! against the running version, so a cancelled elevation prompt is reported as
+//! an incomplete update rather than a successful one.
 
 use super::AppContext;
 use crate::db::audit::AuditEntry;
+use crate::db::settings::PendingUpdateRow;
 use crate::error::{AppError, AppResult};
-use crate::models::{UpdateCheckView, UpdateInstallView};
+use crate::models::{InstallKind, PendingUpdateView, UpdateCheckView, UpdateInstallView};
 use crate::permissions::{Access, Permission};
+use crate::util::now_ms;
 use reqwest::Client;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::time::Duration;
 
 const RELEASES_API: &str = "https://api.github.com/repos/itriedcoding/avero-cad/releases/latest";
 const RELEASE_PREFIX: &str = "https://github.com/itriedcoding/avero-cad/releases/download/";
 const SUMS_ASSET: &str = "SHA256SUMS.txt";
 const MAX_DOWNLOAD_BYTES: u64 = 200 * 1024 * 1024;
+#[cfg(windows)]
+const PRODUCT_NAME: &str = "Avero CAD";
+#[cfg(windows)]
+const UNINSTALL_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall";
+/// How long an installer may run before a still-old build counts as stalled.
+const PENDING_STALE_MS: i64 = 10 * 60 * 1000;
 
 #[derive(Debug, Deserialize)]
 struct GhAsset {
@@ -118,15 +137,149 @@ pub fn is_newer(candidate: &str, current: &str) -> bool {
     }
 }
 
-fn select_installer(assets: &[GhAsset]) -> Option<&GhAsset> {
+fn select_nsis_installer(assets: &[GhAsset]) -> Option<&GhAsset> {
     assets
         .iter()
         .find(|asset| asset.name.to_ascii_lowercase().ends_with("setup.exe"))
-        .or_else(|| {
-            assets
-                .iter()
-                .find(|asset| asset.name.to_ascii_lowercase().ends_with(".msi"))
-        })
+}
+
+fn select_msi_installer(assets: &[GhAsset]) -> Option<&GhAsset> {
+    assets
+        .iter()
+        .find(|asset| asset.name.to_ascii_lowercase().ends_with(".msi"))
+}
+
+/// Classify one uninstall registry entry. WiX MSI packages set the
+/// `WindowsInstaller` flag and uninstall through `MsiExec`; the NSIS installer
+/// ships its own `uninstall.exe`.
+pub fn classify_uninstall_entry(
+    windows_installer: Option<u32>,
+    uninstall_string: Option<&str>,
+) -> InstallKind {
+    if windows_installer == Some(1) {
+        return InstallKind::Msi;
+    }
+    let Some(uninstall) = uninstall_string else {
+        return InstallKind::Unknown;
+    };
+    let uninstall = uninstall.to_ascii_lowercase();
+    if uninstall.contains("msiexec") {
+        return InstallKind::Msi;
+    }
+    if uninstall.contains("uninstall.exe") {
+        return InstallKind::Nsis;
+    }
+    InstallKind::Unknown
+}
+
+static INSTALL_KIND: OnceLock<InstallKind> = OnceLock::new();
+
+/// How this copy of Avero CAD was installed. Cached: an installation does not
+/// change while the app is running.
+pub fn install_kind() -> InstallKind {
+    *INSTALL_KIND.get_or_init(detect_install_kind)
+}
+
+#[cfg(windows)]
+fn detect_install_kind() -> InstallKind {
+    use winreg::enums::{
+        HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, KEY_WOW64_64KEY,
+    };
+    use winreg::RegKey;
+
+    let mut found = InstallKind::Unknown;
+    // The 32-bit NSIS stub writes to the WOW6432Node view, the x64 MSI package to
+    // the native view, and either can be per-user or per-machine.
+    for hive in [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER] {
+        let root = RegKey::predef(hive);
+        for view in [KEY_WOW64_64KEY, KEY_WOW64_32KEY] {
+            let Ok(uninstall) = root.open_subkey_with_flags(UNINSTALL_KEY, KEY_READ | view) else {
+                continue;
+            };
+            for name in uninstall.enum_keys().flatten() {
+                let Ok(entry) = uninstall.open_subkey_with_flags(&name, KEY_READ | view) else {
+                    continue;
+                };
+                let display: String = entry.get_value("DisplayName").unwrap_or_default();
+                if !display.trim().eq_ignore_ascii_case(PRODUCT_NAME) {
+                    continue;
+                }
+                let windows_installer: Option<u32> = entry.get_value("WindowsInstaller").ok();
+                let uninstall_string: Option<String> = entry.get_value("UninstallString").ok();
+                match classify_uninstall_entry(windows_installer, uninstall_string.as_deref()) {
+                    // An MSI registration is what future MSI upgrades and Group
+                    // Policy use, so it wins if both copies are registered.
+                    InstallKind::Msi => return InstallKind::Msi,
+                    InstallKind::Nsis => found = InstallKind::Nsis,
+                    InstallKind::Unknown => {}
+                }
+            }
+        }
+    }
+    found
+}
+
+#[cfg(not(windows))]
+fn detect_install_kind() -> InstallKind {
+    InstallKind::Unknown
+}
+
+/// One sentence explaining what this installation can do about an update.
+pub fn install_hint(kind: InstallKind) -> &'static str {
+    match kind {
+        InstallKind::Nsis => {
+            "This copy was installed with the NSIS installer and updates itself in place."
+        }
+        InstallKind::Msi => {
+            "This copy was installed with the MSI package, so an update must be installed from the new MSI with elevation; the NSIS package is not used because it would leave a second copy behind."
+        }
+        InstallKind::Unknown => {
+            "This copy was not installed by Avero CAD's Windows installer (portable or development build), so updates are downloaded and installed manually."
+        }
+    }
+}
+
+/// True once a started installer has had time to run and the build is still old.
+pub fn pending_is_stalled(started_at: i64, now: i64) -> bool {
+    started_at > 0 && now.saturating_sub(started_at) > PENDING_STALE_MS
+}
+
+fn pending_view(row: &PendingUpdateRow) -> PendingUpdateView {
+    PendingUpdateView {
+        version: row.version.clone(),
+        started_at: row.started_at,
+        installer_path: row.installer_path.clone(),
+        sha256: row.sha256.clone(),
+        stalled: pending_is_stalled(row.started_at, now_ms()),
+    }
+}
+
+/// Resolve a previously started installer against the running version.
+fn reconcile_pending(ctx: &AppContext, access: &Access) -> AppResult<Option<PendingUpdateView>> {
+    let Some(row) = ctx.db.pending_update()? else {
+        return Ok(None);
+    };
+    if !is_newer(&row.version, current_version()) {
+        ctx.db.clear_pending_update()?;
+        ctx.log(
+            "info",
+            &format!(
+                "Pending update {} is installed (running {}).",
+                row.version,
+                current_version()
+            ),
+        );
+        let _ = ctx.db.record_audit(&AuditEntry {
+            actor_user_id: Some(access.user_id),
+            actor_name: &access.display_name,
+            category: "system",
+            action: "update.applied",
+            target: &row.version,
+            details: &format!("running {}", current_version()),
+        });
+        return Ok(None);
+    }
+    Ok(Some(pending_view(&row)))
 }
 
 fn digest_checksum(digest: &str) -> Option<String> {
@@ -246,6 +399,8 @@ pub async fn check(ctx: &AppContext, access: &Access) -> AppResult<UpdateCheckVi
     access.require(Permission::SettingsManage)?;
     let client = http_client()?;
     let current = current_version().to_string();
+    let kind = install_kind();
+    let pending = reconcile_pending(ctx, access)?;
     let release = match latest_release(&client).await {
         Ok(release) => release,
         Err(err) => {
@@ -259,14 +414,31 @@ pub async fn check(ctx: &AppContext, access: &Access) -> AppResult<UpdateCheckVi
                 asset_name: None,
                 asset_size: None,
                 can_install: false,
+                install_kind: kind,
+                install_supported: kind == InstallKind::Nsis,
+                manual_url: None,
+                pending,
                 detail: err.message().to_string(),
             });
         }
     };
     let latest = release.tag_name.trim_start_matches(['v', 'V']).to_string();
-    let asset = select_installer(&release.assets);
+    let nsis = select_nsis_installer(&release.assets);
+    let msi = select_msi_installer(&release.assets);
+    // Show the package this installation would actually use.
+    let asset = match kind {
+        InstallKind::Nsis => nsis,
+        InstallKind::Msi => msi.or(nsis),
+        InstallKind::Unknown => nsis.or(msi),
+    };
+    let install_supported = kind == InstallKind::Nsis && nsis.is_some();
+    let manual_url = if kind == InstallKind::Nsis {
+        None
+    } else {
+        asset.map(|asset| asset.browser_download_url.clone())
+    };
     let available = !release.draft && !release.prerelease && is_newer(&release.tag_name, &current);
-    let detail = if available {
+    let mut detail = if available {
         format!("Version {latest} is available.")
     } else if release.prerelease || release.draft {
         "The latest release is a draft or pre-release.".to_string()
@@ -278,6 +450,10 @@ pub async fn check(ctx: &AppContext, access: &Access) -> AppResult<UpdateCheckVi
     } else {
         format!("You are running the newest published version ({current}).")
     };
+    if available && !install_supported {
+        detail.push(' ');
+        detail.push_str(install_hint(kind));
+    }
     let _ = ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,
@@ -290,7 +466,11 @@ pub async fn check(ctx: &AppContext, access: &Access) -> AppResult<UpdateCheckVi
         current_version: current,
         latest_version: Some(latest),
         available,
-        can_install: available && asset.is_some(),
+        can_install: available && install_supported,
+        install_kind: kind,
+        install_supported,
+        manual_url,
+        pending,
         release_url: Some(release.html_url),
         published_at: release.published_at,
         notes: release.body.map(|body| body.chars().take(4000).collect()),
@@ -298,6 +478,25 @@ pub async fn check(ctx: &AppContext, access: &Access) -> AppResult<UpdateCheckVi
         asset_size: asset.map(|asset| asset.size),
         detail,
     })
+}
+
+/// Forget an update whose installer never completed. The next check would keep
+/// reporting it as incomplete otherwise.
+pub fn dismiss_pending(ctx: &AppContext, access: &Access) -> AppResult<()> {
+    access.require(Permission::SettingsManage)?;
+    let pending = ctx.db.pending_update()?;
+    ctx.db.clear_pending_update()?;
+    if let Some(row) = pending {
+        let _ = ctx.db.record_audit(&AuditEntry {
+            actor_user_id: Some(access.user_id),
+            actor_name: &access.display_name,
+            category: "system",
+            action: "update.pending_dismissed",
+            target: &row.version,
+            details: "",
+        });
+    }
+    Ok(())
 }
 
 pub async fn install(
@@ -330,9 +529,29 @@ pub async fn install(
         )));
     }
     let version = release.tag_name.trim_start_matches(['v', 'V']).to_string();
-    let asset = select_installer(&release.assets).ok_or_else(|| {
-        AppError::not_found("The latest release has no Windows installer attached.")
-    })?;
+    let kind = install_kind();
+    if kind != InstallKind::Nsis {
+        // Running the NSIS package here would install a second copy beside the
+        // existing one instead of upgrading it.
+        let alternative = match kind {
+            InstallKind::Msi => select_msi_installer(&release.assets)
+                .or_else(|| select_nsis_installer(&release.assets)),
+            _ => select_nsis_installer(&release.assets),
+        };
+        let url = alternative
+            .map(|asset| asset.browser_download_url.clone())
+            .unwrap_or_else(|| release.html_url.clone());
+        return Err(AppError::conflict(match kind {
+            InstallKind::Msi => format!(
+                "Avero CAD {version} is installed from the MSI package, so it cannot install the NSIS update itself. Download the MSI from {url} and run it; Windows will ask for elevation. Installing the NSIS package here would leave a second copy of Avero CAD on this PC."
+            ),
+            _ => format!(
+                "This copy of Avero CAD was not installed by its Windows installer (portable or development build), so there is no installation to replace. Download {url} and run it manually."
+            ),
+        }));
+    }
+    let asset = select_nsis_installer(&release.assets)
+        .ok_or_else(|| AppError::not_found("The latest release has no NSIS installer attached."))?;
     let expected = expected_checksum(&client, &release, asset).await?;
     let bytes = download(&client, &asset.browser_download_url).await?;
     if bytes.len() as u64 != asset.size {
@@ -363,20 +582,33 @@ pub async fn install(
         target: &version,
         details: &format!("sha256 {actual}"),
     })?;
-    spawn_installer(&path)?;
+    // Record the attempt before handing over to Windows: if elevation is
+    // declined or the installer dies, the next check still knows about it.
+    let installer_path = path.display().to_string();
+    ctx.db.set_pending_update(&PendingUpdateRow {
+        version: version.clone(),
+        started_at: now_ms(),
+        installer_path: installer_path.clone(),
+        sha256: actual.clone(),
+    })?;
+    if let Err(err) = spawn_installer(&path) {
+        let _ = ctx.db.clear_pending_update();
+        return Err(err);
+    }
     ctx.db.record_audit(&AuditEntry {
         actor_user_id: Some(access.user_id),
         actor_name: &access.display_name,
         category: "system",
         action: "update.installer_started",
         target: &version,
-        details: &path.display().to_string(),
+        details: &installer_path,
     })?;
     Ok(UpdateInstallView {
         version,
-        installer_path: path.display().to_string(),
+        installer_path,
         sha256: actual,
         size_bytes: bytes.len() as u64,
+        install_kind: kind,
     })
 }
 
@@ -455,24 +687,6 @@ mod tests {
     }
 
     #[test]
-    fn prefers_the_nsis_installer_and_falls_back_to_msi() {
-        let assets = vec![asset("notes.txt", None), asset("app.msi", None)];
-        assert_eq!(
-            select_installer(&assets).map(|a| a.name.as_str()),
-            Some("app.msi")
-        );
-        let assets = vec![
-            asset("app.msi", None),
-            asset("Avero.CAD_9_x64-setup.exe", None),
-        ];
-        assert_eq!(
-            select_installer(&assets).map(|a| a.name.as_str()),
-            Some("Avero.CAD_9_x64-setup.exe")
-        );
-        assert!(select_installer(&[]).is_none());
-    }
-
-    #[test]
     fn parses_the_published_release_payload() {
         // Shape captured from the live v1.2.0 release, including asset digests.
         let json = r#"{
@@ -500,7 +714,7 @@ mod tests {
         let release: GhRelease = serde_json::from_str(json).unwrap();
         assert_eq!(release.tag_name, "v1.2.0");
         assert!(!release.draft && !release.prerelease);
-        let asset = select_installer(&release.assets).unwrap();
+        let asset = select_nsis_installer(&release.assets).unwrap();
         assert!(asset.name.ends_with("-setup.exe"));
         assert_eq!(asset.size, 2_488_532);
         assert_eq!(
@@ -509,6 +723,67 @@ mod tests {
         );
         assert!(is_newer(&release.tag_name, "1.1.0"));
         assert!(!is_newer(&release.tag_name, "1.2.0"));
+    }
+
+    #[test]
+    fn classifies_uninstall_entries() {
+        assert_eq!(
+            classify_uninstall_entry(Some(1), Some("MsiExec.exe /X{0F1B-4A}")),
+            InstallKind::Msi
+        );
+        assert_eq!(
+            classify_uninstall_entry(None, Some("MsiExec.exe /I{0F1B-4A}")),
+            InstallKind::Msi
+        );
+        assert_eq!(
+            classify_uninstall_entry(
+                Some(0),
+                Some("\"C:\\Program Files\\Avero CAD\\uninstall.exe\"")
+            ),
+            InstallKind::Nsis
+        );
+        assert_eq!(classify_uninstall_entry(None, None), InstallKind::Unknown);
+        assert_eq!(
+            classify_uninstall_entry(Some(0), Some("C:\\Tools\\remove.exe")),
+            InstallKind::Unknown
+        );
+    }
+
+    #[test]
+    fn picks_the_matching_package_for_each_install_kind() {
+        let assets = vec![
+            asset("Avero.CAD_9_x64-setup.exe", None),
+            asset("Avero.CAD_9_x64_en-US.msi", None),
+        ];
+        assert_eq!(
+            select_nsis_installer(&assets).map(|asset| asset.name.as_str()),
+            Some("Avero.CAD_9_x64-setup.exe")
+        );
+        assert_eq!(
+            select_msi_installer(&assets).map(|asset| asset.name.as_str()),
+            Some("Avero.CAD_9_x64_en-US.msi")
+        );
+        assert!(select_msi_installer(&assets[..1]).is_none());
+        assert!(select_nsis_installer(&assets[1..]).is_none());
+    }
+
+    #[test]
+    fn explains_what_each_install_kind_can_do() {
+        assert!(install_hint(InstallKind::Nsis).contains("updates itself"));
+        assert!(install_hint(InstallKind::Msi).contains("MSI"));
+        assert!(install_hint(InstallKind::Unknown).contains("manually"));
+    }
+
+    #[test]
+    fn pending_updates_go_stale_after_the_grace_period() {
+        let started = 1_700_000_000_000;
+        assert!(!pending_is_stalled(started, started + PENDING_STALE_MS));
+        assert!(pending_is_stalled(started, started + PENDING_STALE_MS + 1));
+        assert!(!pending_is_stalled(0, started), "no timestamp is not stale");
+        assert!(
+            !pending_is_stalled(started, started - 5_000),
+            "clock skew must not look like a failure"
+        );
     }
 
     #[test]

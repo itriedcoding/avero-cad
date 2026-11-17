@@ -25,10 +25,17 @@ import { InlineError, PageHeader, TableSkeleton } from "@/components/ui/Feedback
 import { KeyValue, Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import type {
   DatabaseStatsView,
+  InstallKind,
   SettingsView,
   UpdateCheckView,
   UpdateInstallView,
 } from "@/types";
+
+const INSTALL_KIND_LABELS: Record<InstallKind, string> = {
+  nsis: "NSIS installer",
+  msi: "MSI package",
+  unknown: "Not installed by the Windows installer",
+};
 
 const STARTUP_PAGES = [
   { value: "dashboard", label: "Dashboard" },
@@ -57,6 +64,7 @@ export default function SettingsPage() {
   const [installingUpdate, setInstallingUpdate] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(false);
   const [installedUpdate, setInstalledUpdate] = useState<UpdateInstallView | null>(null);
+  const [dismissingPending, setDismissingPending] = useState(false);
 
   // Look for a newer published release once when the page opens.
   useEffect(() => {
@@ -147,6 +155,20 @@ export default function SettingsPage() {
       if (announce) toast.error("Could not check for updates", errorMessage(err));
     } finally {
       setCheckingUpdate(false);
+    }
+  }
+
+  async function dismissPendingUpdate() {
+    if (!token) return;
+    setDismissingPending(true);
+    try {
+      await api.dismissPendingUpdate(token);
+      toast.success("Pending update dismissed");
+      await runUpdateCheck(false);
+    } catch (err) {
+      toast.error("Could not dismiss the pending update", errorMessage(err));
+    } finally {
+      setDismissingPending(false);
     }
   }
 
@@ -538,7 +560,7 @@ export default function SettingsPage() {
       <Panel className="mt-4">
         <PanelHeader
           title="Updates"
-          description="Checks the latest published release on GitHub, verifies the installer's SHA-256 digest and starts it. Nothing is installed without a matching digest."
+          description="Checks the latest published release on GitHub and verifies the installer's SHA-256 digest. Only NSIS installs replace themselves; MSI copies are pointed at the new MSI instead of a second installation."
           actions={
             updateInfo?.available ? (
               <Badge tone="positive" dot>
@@ -552,6 +574,12 @@ export default function SettingsPage() {
         <PanelBody className="space-y-3">
           <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
             <KeyValue label="Installed version" value={bootstrap?.appVersion ?? "—"} mono />
+            <KeyValue
+              label="Install method"
+              value={
+                updateInfo ? INSTALL_KIND_LABELS[updateInfo.installKind] : "Not checked yet"
+              }
+            />
             <KeyValue
               label="Latest release"
               value={
@@ -590,6 +618,43 @@ export default function SettingsPage() {
               {updateInfo.notes}
             </pre>
           ) : null}
+          {updateInfo?.pending ? (
+            <div className="rounded-md border border-line bg-surface-2 px-3 py-2.5 text-[11px] leading-5 text-muted">
+              <p className="text-ink">
+                Update to {updateInfo.pending.version}{" "}
+                {updateInfo.pending.stalled ? "did not complete" : "is waiting to be installed"}.
+              </p>
+              <p className="mt-0.5">
+                An installer was started {formatDateTime(updateInfo.pending.startedAt)} from{" "}
+                <span className="mono break-all text-ink">{updateInfo.pending.installerPath}</span>.
+                {updateInfo.pending.stalled
+                  ? " Windows may have asked for permission and the prompt was cancelled, so nothing was installed. Start the update again, or dismiss this notice."
+                  : " Approve the Windows prompt if it is still open; Avero CAD closes while the installer runs."}
+              </p>
+              <div className="mt-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={dismissingPending}
+                  onClick={() => void dismissPendingUpdate()}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          {updateInfo && !updateInfo.installSupported ? (
+            <div className="rounded-md border border-line px-3 py-2.5 text-[11px] leading-5 text-muted">
+              <p className="text-ink">Manual update required</p>
+              <p className="mt-0.5">
+                This copy cannot replace itself. Download the package below and run it; Windows will
+                ask for permission.
+              </p>
+              <p className="mono mt-1 break-all text-ink">
+                {updateInfo.manualUrl ?? "This release has no package for this installation."}
+              </p>
+            </div>
+          ) : null}
           {installedUpdate ? (
             <div className="rounded-md border border-line bg-surface-2 px-3 py-2.5 text-[11px] leading-5 text-muted">
               <p className="text-ink">Installer started for {installedUpdate.version}.</p>
@@ -597,7 +662,8 @@ export default function SettingsPage() {
                 The download was checked against SHA-256{" "}
                 <span className="mono break-all text-ink">{installedUpdate.sha256}</span>. Approve the
                 Windows prompt if it appears; the installer closes Avero CAD and installs the new
-                version. Start it again from the Start menu afterwards.
+                version. This is not treated as installed until Avero CAD restarts on it, so a
+                cancelled prompt stays listed above as an incomplete update.
               </p>
             </div>
           ) : null}

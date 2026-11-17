@@ -166,6 +166,7 @@ export const api = {
   checkForUpdate: (token: string) => call<UpdateCheckView>("check_for_update", { token }),
   installUpdate: (token: string, confirmed: boolean) =>
     call<UpdateInstallView>("install_update", { token, confirmed }),
+  dismissPendingUpdate: (token: string) => call<void>("dismiss_pending_update", { token }),
 
   listCalls: (token: string, status: string | null, limit = 100) =>
     call<CallView[]>("list_calls", { token, status, limit }),

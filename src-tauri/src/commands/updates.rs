@@ -21,3 +21,9 @@ pub async fn install_update(
     let access = state.authenticate(&token)?;
     updater::install(&state, &access, confirmed).await
 }
+
+#[tauri::command]
+pub fn dismiss_pending_update(state: State<'_, AppContext>, token: String) -> Result<(), AppError> {
+    let access = state.authenticate(&token)?;
+    updater::dismiss_pending(&state, &access)
+}

@@ -526,6 +526,16 @@ export interface TopModeratorView {
   failed: number;
 }
 
+export type InstallKind = "nsis" | "msi" | "unknown";
+
+export interface PendingUpdateView {
+  version: string;
+  startedAt: number;
+  installerPath: string;
+  sha256: string;
+  stalled: boolean;
+}
+
 export interface UpdateCheckView {
   currentVersion: string;
   latestVersion: string | null;
@@ -536,6 +546,10 @@ export interface UpdateCheckView {
   assetName: string | null;
   assetSize: number | null;
   canInstall: boolean;
+  installKind: InstallKind;
+  installSupported: boolean;
+  manualUrl: string | null;
+  pending: PendingUpdateView | null;
   detail: string;
 }
 
@@ -544,6 +558,7 @@ export interface UpdateInstallView {
   installerPath: string;
   sha256: string;
   sizeBytes: number;
+  installKind: InstallKind;
 }
 
 export interface StatsOverviewView {
