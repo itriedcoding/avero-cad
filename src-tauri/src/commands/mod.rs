@@ -12,3 +12,4 @@ pub mod operations;
 pub mod players;
 pub mod settings;
 pub mod staff;
+pub mod updates;

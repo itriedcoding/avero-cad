@@ -31,6 +31,8 @@ import type {
   StaffUserView,
   StatsOverviewView,
   UnitView,
+  UpdateCheckView,
+  UpdateInstallView,
 } from "@/types";
 
 export function isApiError(value: unknown): value is ApiError {
@@ -160,6 +162,10 @@ export const api = {
 
   statsOverview: (token: string, days: number) =>
     call<StatsOverviewView>("stats_overview", { token, days }),
+
+  checkForUpdate: (token: string) => call<UpdateCheckView>("check_for_update", { token }),
+  installUpdate: (token: string, confirmed: boolean) =>
+    call<UpdateInstallView>("install_update", { token, confirmed }),
 
   listCalls: (token: string, status: string | null, limit = 100) =>
     call<CallView[]>("list_calls", { token, status, limit }),

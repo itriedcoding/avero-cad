@@ -526,6 +526,26 @@ export interface TopModeratorView {
   failed: number;
 }
 
+export interface UpdateCheckView {
+  currentVersion: string;
+  latestVersion: string | null;
+  available: boolean;
+  releaseUrl: string | null;
+  publishedAt: string | null;
+  notes: string | null;
+  assetName: string | null;
+  assetSize: number | null;
+  canInstall: boolean;
+  detail: string;
+}
+
+export interface UpdateInstallView {
+  version: string;
+  installerPath: string;
+  sha256: string;
+  sizeBytes: number;
+}
+
 export interface StatsOverviewView {
   rangeDays: number;
   since: number;

@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { DatabaseBackup, FolderOpen, HardDriveDownload, RotateCcw, Save, ShieldAlert } from "lucide-react";
+import {
+  DatabaseBackup,
+  Download,
+  FolderOpen,
+  HardDriveDownload,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  ShieldAlert,
+} from "lucide-react";
 import { api, errorMessage } from "@/lib/api";
 import { formatBytes, formatDateTime, formatNumber } from "@/lib/format";
 import { MAP_OPTIONS } from "@/lib/map";
@@ -14,7 +23,12 @@ import { Input, Select, Toggle } from "@/components/ui/Field";
 import { ConfirmDialog } from "@/components/ui/Modal";
 import { InlineError, PageHeader, TableSkeleton } from "@/components/ui/Feedback";
 import { KeyValue, Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
-import type { DatabaseStatsView, SettingsView } from "@/types";
+import type {
+  DatabaseStatsView,
+  SettingsView,
+  UpdateCheckView,
+  UpdateInstallView,
+} from "@/types";
 
 const STARTUP_PAGES = [
   { value: "dashboard", label: "Dashboard" },
@@ -38,6 +52,19 @@ export default function SettingsPage() {
   const [restorePath, setRestorePath] = useState("");
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [lastBackupPath, setLastBackupPath] = useState<string | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckView | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [installingUpdate, setInstallingUpdate] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(false);
+  const [installedUpdate, setInstalledUpdate] = useState<UpdateInstallView | null>(null);
+
+  // Look for a newer published release once when the page opens.
+  useEffect(() => {
+    if (!token) return;
+    void runUpdateCheck(false);
+    // Only re-check when the account changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
   const [passwordDraft, setPasswordDraft] = useState({ current: "", next: "", confirm: "" });
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -98,6 +125,28 @@ export default function SettingsPage() {
       toast.error("Backup failed", errorMessage(err));
     } finally {
       setBackingUp(false);
+    }
+  }
+
+  async function runUpdateCheck(announce: boolean) {
+    if (!token) return;
+    setCheckingUpdate(true);
+    try {
+      const info = await api.checkForUpdate(token);
+      setUpdateInfo(info);
+      if (announce) {
+        if (info.available) {
+          toast.success("Update available", info.detail);
+        } else if (info.latestVersion) {
+          toast.info("You are up to date", info.detail);
+        } else {
+          toast.error("Could not check for updates", info.detail);
+        }
+      }
+    } catch (err) {
+      if (announce) toast.error("Could not check for updates", errorMessage(err));
+    } finally {
+      setCheckingUpdate(false);
     }
   }
 
@@ -486,11 +535,133 @@ export default function SettingsPage() {
         </Panel>
       </div>
 
+      <Panel className="mt-4">
+        <PanelHeader
+          title="Updates"
+          description="Checks the latest published release on GitHub, verifies the installer's SHA-256 digest and starts it. Nothing is installed without a matching digest."
+          actions={
+            updateInfo?.available ? (
+              <Badge tone="positive" dot>
+                {updateInfo.latestVersion} available
+              </Badge>
+            ) : updateInfo ? (
+              <Badge tone="muted">Up to date</Badge>
+            ) : null
+          }
+        />
+        <PanelBody className="space-y-3">
+          <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
+            <KeyValue label="Installed version" value={bootstrap?.appVersion ?? "—"} mono />
+            <KeyValue
+              label="Latest release"
+              value={
+                updateInfo?.latestVersion ?? (checkingUpdate ? "Checking…" : "Not checked yet")
+              }
+              mono
+            />
+            <KeyValue
+              label="Published"
+              value={
+                updateInfo?.publishedAt
+                  ? formatDateTime(Date.parse(updateInfo.publishedAt))
+                  : "—"
+              }
+            />
+            <KeyValue
+              label="Installer"
+              value={
+                updateInfo?.assetName
+                  ? `${updateInfo.assetName} · ${formatBytes(updateInfo.assetSize ?? 0)}`
+                  : "—"
+              }
+              mono
+            />
+          </div>
+          {updateInfo ? (
+            <p className="text-[11px] leading-5 text-muted">{updateInfo.detail}</p>
+          ) : (
+            <p className="text-[11px] leading-5 text-faint">
+              The newest release is looked up over HTTPS from the public GitHub Releases API; no
+              credentials or tokens are used.
+            </p>
+          )}
+          {updateInfo?.notes ? (
+            <pre className="max-h-44 overflow-auto whitespace-pre-wrap rounded border border-line bg-surface-2 p-2.5 text-[11px] leading-5 text-muted">
+              {updateInfo.notes}
+            </pre>
+          ) : null}
+          {installedUpdate ? (
+            <div className="rounded-md border border-line bg-surface-2 px-3 py-2.5 text-[11px] leading-5 text-muted">
+              <p className="text-ink">Installer started for {installedUpdate.version}.</p>
+              <p className="mt-0.5">
+                The download was checked against SHA-256{" "}
+                <span className="mono break-all text-ink">{installedUpdate.sha256}</span>. Approve the
+                Windows prompt if it appears; the installer closes Avero CAD and installs the new
+                version. Start it again from the Start menu afterwards.
+              </p>
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={checkingUpdate}
+              onClick={() => void runUpdateCheck(true)}
+              leadingIcon={<RefreshCw size={13} />}
+            >
+              Check for updates
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={!updateInfo?.canInstall || installingUpdate}
+              onClick={() => setInstallPrompt(true)}
+              leadingIcon={<Download size={13} />}
+            >
+              {updateInfo?.available
+                ? `Download and install ${updateInfo.latestVersion}`
+                : "Download and install"}
+            </Button>
+            {updateInfo?.releaseUrl ? (
+              <span className="mono truncate text-[10px] text-faint">{updateInfo.releaseUrl}</span>
+            ) : null}
+          </div>
+        </PanelBody>
+      </Panel>
+
       <p className="mt-3 flex items-start gap-2 text-[11px] leading-5 text-faint">
         <ShieldAlert size={13} className="mt-0.5 shrink-0" />
         Restoring a backup replaces staff accounts and operational data. You are signed out afterwards
         and must sign in with an account from the restored file.
       </p>
+
+      <ConfirmDialog
+        open={installPrompt}
+        onClose={() => setInstallPrompt(false)}
+        title="Install update"
+        description={`Avero CAD will download release ${updateInfo?.latestVersion ?? ""}, verify its SHA-256 digest and start the Windows installer.`}
+        confirmLabel="Download and verify"
+        loading={installingUpdate}
+        onConfirm={async () => {
+          if (!token) return;
+          setInstallingUpdate(true);
+          try {
+            const result = await api.installUpdate(token, true);
+            setInstalledUpdate(result);
+            setInstallPrompt(false);
+            toast.success("Installer started", "Approve the Windows prompt to finish installing.");
+          } catch (err) {
+            toast.error("Update failed", errorMessage(err));
+          } finally {
+            setInstallingUpdate(false);
+          }
+        }}
+      >
+        <p className="text-[11px] leading-5 text-muted">
+          The installer is downloaded from this project's GitHub release and discarded if its
+          checksum does not match the digest GitHub reports for the asset.
+        </p>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={restoreOpen}

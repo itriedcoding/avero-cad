@@ -133,7 +133,10 @@ pub fn run() {
             commands::settings::test_api_connection,
             commands::settings::backup_database,
             commands::settings::restore_database,
-            commands::settings::database_stats
+            commands::settings::database_stats,
+            // Updates from GitHub Releases
+            commands::updates::check_for_update,
+            commands::updates::install_update
         ])
         .run(tauri::generate_context!())
         .expect("error while running Avero CAD");

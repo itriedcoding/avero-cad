@@ -3,9 +3,11 @@ import {
   Activity,
   Car,
   Check,
+  Clock,
   Copy,
   CarFront,
   Radio,
+  ScanEye,
   Server,
   ShieldCheck,
   Siren,
@@ -13,7 +15,7 @@ import {
   Wifi,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { formatNumber, formatRelative, formatTime } from "@/lib/format";
+import { formatElapsed, formatNumber, formatRelative, formatTime } from "@/lib/format";
 import { navigate } from "@/lib/router";
 import { useSession } from "@/state/session";
 import { useSnapshot } from "@/state/snapshot";
@@ -23,7 +25,7 @@ import { Button } from "@/components/ui/Button";
 import { KeyValue, Panel, PanelBody, PanelHeader, SectionTitle, StatTile } from "@/components/ui/Panel";
 import { PageHeader, InlineError, RefreshButton, TableSkeleton } from "@/components/ui/Feedback";
 import { Sparkline } from "@/components/ui/Sparkline";
-import type { CallView } from "@/types";
+import type { BoloView, CallView, DutyStatusView } from "@/types";
 
 export default function DashboardPage() {
   const { snapshot, loading, error, refresh, refreshing, lastSync } = useSnapshot();
@@ -31,6 +33,9 @@ export default function DashboardPage() {
   const toast = useToast();
   const [calls, setCalls] = useState<CallView[]>([]);
   const [copied, setCopied] = useState(false);
+  const [duty, setDuty] = useState<DutyStatusView | null>(null);
+  const [activeBolos, setActiveBolos] = useState<BoloView[]>([]);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!token || !has("dispatch.view")) {
@@ -41,6 +46,32 @@ export default function DashboardPage() {
       .listCalls(token, null, 100)
       .then(setCalls)
       .catch(() => setCalls([]));
+  }, [token, has, snapshot?.fetchedAt]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Refresh the local operational panels with each live poll.
+  useEffect(() => {
+    if (!token) return;
+    if (has("shifts.view")) {
+      api
+        .dutyStatus(token)
+        .then(setDuty)
+        .catch(() => setDuty(null));
+    } else {
+      setDuty(null);
+    }
+    if (has("bolos.view")) {
+      api
+        .listBolos(token, "active")
+        .then(setActiveBolos)
+        .catch(() => setActiveBolos([]));
+    } else {
+      setActiveBolos([]);
+    }
   }, [token, has, snapshot?.fetchedAt]);
 
   const server = snapshot?.server ?? null;
@@ -176,6 +207,101 @@ export default function DashboardPage() {
           icon={<CarFront size={15} />}
         />
       </div>
+
+      {has("shifts.view") || has("bolos.view") ? (
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          {has("shifts.view") ? (
+            <Panel>
+              <PanelHeader
+                title="On duty now"
+                description="Staff clocked in through the duty roster."
+                actions={
+                  <Badge tone={(duty?.roster.length ?? 0) > 0 ? "positive" : "muted"} dot>
+                    {duty?.roster.length ?? 0} on duty
+                  </Badge>
+                }
+              />
+              <PanelBody padded={false}>
+                {(duty?.roster ?? []).length === 0 ? (
+                  <p className="px-4 py-6 text-center text-xs text-faint">
+                    Nobody is clocked in. Use the duty roster to start a shift.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-line/70">
+                    {(duty?.roster ?? []).map((shift) => (
+                      <li
+                        key={shift.id}
+                        className="flex items-center justify-between gap-3 px-4 py-2"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Clock size={12} className="shrink-0 text-faint" />
+                          <span className="truncate text-[12px] text-ink">{shift.displayName}</span>
+                        </span>
+                        <span className="mono shrink-0 text-[11px] text-faint">
+                          {formatElapsed(Math.max(0, now - shift.startedAt))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </PanelBody>
+            </Panel>
+          ) : null}
+
+          {has("bolos.view") ? (
+            <Panel>
+              <PanelHeader
+                title="Active BOLOs"
+                description="Matched against the latest live snapshot by username or plate."
+                actions={
+                  <Button size="sm" variant="ghost" onClick={() => navigate("bolos")}>
+                    Open board
+                  </Button>
+                }
+              />
+              <PanelBody padded={false}>
+                {activeBolos.length === 0 ? (
+                  <p className="px-4 py-6 text-center text-xs text-faint">
+                    No active BOLOs are on the board.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-line/70">
+                    {activeBolos.slice(0, 6).map((bolo) => (
+                      <li key={bolo.id} className="px-4 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex min-w-0 items-center gap-2">
+                            <ScanEye size={12} className="shrink-0 text-faint" />
+                            <span className="truncate text-[12px] text-ink">{bolo.subjectName}</span>
+                          </span>
+                          <Badge
+                            tone={
+                              bolo.priority === "critical"
+                                ? "danger"
+                                : bolo.priority === "high"
+                                  ? "warning"
+                                  : "muted"
+                            }
+                          >
+                            {bolo.priority}
+                          </Badge>
+                        </div>
+                        <p className="mt-0.5 truncate text-[10px] text-faint">
+                          {bolo.liveMatch ??
+                            (bolo.plate
+                              ? `Plate ${bolo.plate}`
+                              : bolo.kind === "person"
+                                ? "Not seen in the server"
+                                : "Vehicle BOLO")}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </PanelBody>
+            </Panel>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Panel className="xl:col-span-2">

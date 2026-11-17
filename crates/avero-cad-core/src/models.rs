@@ -838,6 +838,30 @@ pub struct TopModeratorView {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct UpdateCheckView {
+    pub current_version: String,
+    pub latest_version: Option<String>,
+    pub available: bool,
+    pub release_url: Option<String>,
+    pub published_at: Option<String>,
+    pub notes: Option<String>,
+    pub asset_name: Option<String>,
+    pub asset_size: Option<u64>,
+    pub can_install: bool,
+    pub detail: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateInstallView {
+    pub version: String,
+    pub installer_path: String,
+    pub sha256: String,
+    pub size_bytes: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StatsOverviewView {
     pub range_days: i64,
     pub since: i64,

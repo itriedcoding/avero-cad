@@ -6,6 +6,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Database,
+  Download,
   History,
   KeyRound,
   LayoutDashboard,
@@ -24,6 +25,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatRelative } from "@/lib/format";
 import { ROUTES, ROUTE_TITLES, navigate, useRoute, type RouteKey } from "@/lib/router";
@@ -52,6 +54,7 @@ import StaffManagementPage from "@/pages/StaffManagement";
 import AuditLogsPage from "@/pages/AuditLogs";
 import ApiConfigPage from "@/pages/ApiConfig";
 import SettingsPage from "@/pages/Settings";
+import type { UpdateCheckView } from "@/types";
 
 interface NavItem {
   key: RouteKey;
@@ -167,7 +170,7 @@ const CONNECTION_LABEL: Record<string, string> = {
 };
 
 export default function AppShell() {
-  const { session, has, signOut } = useSession();
+  const { session, token, has, signOut } = useSession();
   const { snapshot, settings, refreshing, refresh, lastSync } = useSnapshot();
   const route = useRoute();
   const startupApplied = useRef(false);
@@ -179,7 +182,23 @@ export default function AppShell() {
     }
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<UpdateCheckView | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // One update check per signed-in session, for accounts that may install it.
+  useEffect(() => {
+    if (!token || !has("settings.manage")) return;
+    let cancelled = false;
+    api
+      .checkForUpdate(token)
+      .then((info) => {
+        if (!cancelled && info.available) setAvailableUpdate(info);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, has]);
 
   useEffect(() => {
     try {
@@ -340,6 +359,17 @@ export default function AppShell() {
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            {availableUpdate?.available ? (
+              <button
+                type="button"
+                onClick={() => navigate("settings")}
+                className="hidden items-center gap-1.5 rounded border border-white/25 bg-white/10 px-2 py-1 text-[11px] font-medium text-ink transition-colors hover:bg-white/15 sm:inline-flex"
+                title={availableUpdate.detail}
+              >
+                <Download size={12} />
+                Update {availableUpdate.latestVersion}
+              </button>
+            ) : null}
             <IconButton
               label="Refresh live data"
               onClick={() => {

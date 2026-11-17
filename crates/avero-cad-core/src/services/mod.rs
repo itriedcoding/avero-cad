@@ -11,6 +11,7 @@ pub mod shifts;
 pub mod snapshot;
 pub mod staff;
 pub mod stats;
+pub mod updater;
 
 use crate::api::ApiClient;
 use crate::db::Database;

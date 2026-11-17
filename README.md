@@ -26,6 +26,7 @@ destructive actions and errors.
 - [Security model](#security-model)
 - [Known API limitations](#known-api-limitations)
 - [Testing](#testing)
+- [Updates](#updates)
 - [Releases](#releases)
 - [License](#license)
 
@@ -36,8 +37,9 @@ destructive actions and errors.
 **Operations**
 
 - **Dashboard** — live player counts, police/fire/civilian breakdown, active vehicles, emergency
-  calls, moderation activity, API latency, connection state, last sync time and a player-count
-  sparkline built from locally recorded metric points (never fabricated history).
+  calls, moderation activity, API latency, connection state, last sync time, a player-count
+  sparkline built from locally recorded metric points (never fabricated history), the on-duty staff
+  roster with running shift clocks, and the active BOLOs with any live match.
 - **CAD Dispatch** — create, edit, assign, progress and close incidents; attach players and units;
   priority levels; full call history. Unit roster with callsigns, teams and configurable statuses
   (available, on duty, en route, on scene, transporting, unavailable, off duty).
@@ -264,7 +266,7 @@ These are properties of the ER:LC API, not of this application. Nothing is simul
 ## Testing
 
 ```bash
-cargo test -p avero-cad-core     # 106 unit tests: API, permissions, DB, services, security
+cargo test -p avero-cad-core     # 112 unit tests: API, permissions, DB, services, security
 npm run test                    # 20 frontend unit tests (formatting, status mapping, shift spans)
 npm run build                   # TypeScript typecheck + production bundle
 ```
@@ -278,17 +280,45 @@ Live integration testing needs a real server key and a running ER:LC server; see
 [CONTRIBUTING.md](CONTRIBUTING.md) for a checklist. End-to-end Windows packaging is exercised by the
 release workflow, which uploads the installers it produces.
 
+## Updates
+
+Installed copies check the project's **latest published GitHub release** and can install it without
+leaving the app: **Settings → Updates**, or the header chip that appears when a newer version exists.
+
+- The check reads `https://api.github.com/repos/itriedcoding/avero-cad/releases/latest` over HTTPS
+  with no token, then compares the release tag with the running build using a numeric version
+  comparison. Drafts and pre-releases are never offered.
+- **Install** downloads the release's `x64-setup.exe` from that release, hashes it and compares the
+  result with the SHA-256 digest GitHub reports for the asset (`digest`), falling back to the
+  release's `SHA256SUMS.txt`. A mismatch discards the file and reports the error; nothing is run.
+- Only a verified installer is written to the app data folder and started. The NSIS installer runs
+  in silent mode, closes Avero CAD so the binary can be replaced, and prompts for elevation.
+  Start the app again from the Start menu afterwards.
+- Checking and installing require `settings.manage` and are recorded in the audit log
+  (`update.checked`, `update.verified`, `update.installer_started`).
+- Updates are Windows-only, because the shipped installers are Windows installers. The check itself
+  works on any platform.
+
+This updater verifies integrity with SHA-256 and HTTPS. It does not use Authenticode or a Tauri
+minisign key, so Windows SmartScreen still warns about the unsigned installer; see the note in
+[Releases](#releases).
+
 ## Releases
 
-Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases):
+Windows installers are attached to [Releases](https://github.com/itriedcoding/avero-cad/releases),
+together with a `SHA256SUMS.txt` for every build:
 
-- `Avero.CAD_1.1.0_x64-setup.exe` — NSIS installer (recommended)
-- `Avero.CAD_1.1.0_x64_en-US.msi` — MSI package for managed deployment
+- `Avero.CAD_1.2.0_x64-setup.exe` — NSIS installer (recommended)
+- `Avero.CAD_1.2.0_x64_en-US.msi` — MSI package for managed deployment
+- `SHA256SUMS.txt` — SHA-256 of both files, also used by the in-app updater
 
-**1.1.0** introduces the Avero CAD name (`Avero CAD.exe`, publisher and install folder) together
-with the BOLO board, the duty roster and the statistics module. The application identifier changed to
-`com.averocad.desktop`, so 1.1.0 uses a fresh data directory: a 1.0.0 installation's database is not
-picked up automatically. Export anything you need from 1.0.0 before switching.
+**1.2.0** adds [in-app updates](#updates) from GitHub Releases and puts the on-duty roster and
+active BOLOs on the dashboard. **1.1.0** introduced the Avero CAD name, the BOLO board, the duty
+roster and the statistics module. The identifier changed to `com.averocad.desktop` in 1.1.0, so
+1.1.0 and later use a fresh data directory: a 1.0.0 database is not picked up automatically.
+
+Installers are **unsigned**, so Windows SmartScreen warns on first run. Verify the download against
+`SHA256SUMS.txt`, or the checksum shown in the app's update prompt.
 
 `.github/workflows/release.yml` builds on `windows-latest`, runs the Rust and frontend tests,
 invokes `tauri build` for NSIS and MSI, and attaches both installers to a GitHub Release named after
@@ -303,15 +333,15 @@ To cut a release, bump the version and push:
 #   package.json "version"
 #   src-tauri/tauri.conf.json "version"
 #   Cargo.toml [workspace.package] version
-git commit -am "Release v1.1.0"
+git commit -am "Release v1.2.0"
 git push origin main
 ```
 
 A tag is also accepted if you prefer driving releases from tags:
 
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 Builds are **unsigned** unless you configure code-signing secrets. Windows SmartScreen will warn
